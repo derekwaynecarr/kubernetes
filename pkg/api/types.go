@@ -236,6 +236,8 @@ type JSONBase struct {
 	SelfLink          string    `json:"selfLink,omitempty" yaml:"selfLink,omitempty"`
 	ResourceVersion   uint64    `json:"resourceVersion,omitempty" yaml:"resourceVersion,omitempty"`
 	APIVersion        string    `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	Namespace         string    `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Name              string    `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 // PodStatus represents a status of a pod.

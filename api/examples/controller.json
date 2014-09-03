@@ -2,6 +2,7 @@
     "id": "nginxController",
     "apiVersion": "v1beta1",
     "kind": "ReplicationController",
+    "namespace": "default",
     "desiredState": {
       "replicas": 2,
       "replicaSelector": {"name": "nginx"},

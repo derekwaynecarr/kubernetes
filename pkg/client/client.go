@@ -131,6 +131,11 @@ type AuthInfo struct {
 	Password string
 }
 
+// NamespaceInfo is used to store namespace information
+type NamespaceInfo struct {
+	Namespace string
+}
+
 // RESTClient holds common code used to work with API resources that follow the
 // Kubernetes API pattern.
 // Host is the http://... base for the URL

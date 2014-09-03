@@ -281,7 +281,7 @@ func TestValidateManifest(t *testing.T) {
 
 func TestValidatePod(t *testing.T) {
 	errs := ValidatePod(&api.Pod{
-		JSONBase: api.JSONBase{ID: "foo"},
+		JSONBase: api.JSONBase{ID: "foo", Namespace: "default"},
 		Labels: map[string]string{
 			"foo": "bar",
 		},
@@ -294,7 +294,7 @@ func TestValidatePod(t *testing.T) {
 		t.Errorf("Unexpected non-zero error list: %#v", errs)
 	}
 	errs = ValidatePod(&api.Pod{
-		JSONBase: api.JSONBase{ID: "foo"},
+		JSONBase: api.JSONBase{ID: "foo", Namespace: "default"},
 		Labels: map[string]string{
 			"foo": "bar",
 		},
@@ -307,7 +307,7 @@ func TestValidatePod(t *testing.T) {
 	}
 
 	errs = ValidatePod(&api.Pod{
-		JSONBase: api.JSONBase{ID: "foo"},
+		JSONBase: api.JSONBase{ID: "foo", Namespace: "default"},
 		Labels: map[string]string{
 			"foo": "bar",
 		},
@@ -325,7 +325,7 @@ func TestValidateService(t *testing.T) {
 	// This test should fail because the port number is invalid i.e.
 	// the Port field has a default value of 0.
 	errs := ValidateService(&api.Service{
-		JSONBase: api.JSONBase{ID: "foo"},
+		JSONBase: api.JSONBase{ID: "foo", Namespace: "default"},
 		Selector: map[string]string{
 			"foo": "bar",
 		},
@@ -336,7 +336,7 @@ func TestValidateService(t *testing.T) {
 
 	errs = ValidateService(&api.Service{
 		Port:     6502,
-		JSONBase: api.JSONBase{ID: "foo"},
+		JSONBase: api.JSONBase{ID: "foo", Namespace: "default"},
 		Selector: map[string]string{
 			"foo": "bar",
 		},
@@ -345,26 +345,27 @@ func TestValidateService(t *testing.T) {
 		t.Errorf("Unexpected non-zero error list: %#v", errs)
 	}
 
+	// This test should fail because no ID or Namespace is specified
 	errs = ValidateService(&api.Service{
 		Port: 6502,
 		Selector: map[string]string{
 			"foo": "bar",
 		},
 	})
-	if len(errs) != 1 {
+	if len(errs) != 2 {
 		t.Errorf("Unexpected error list: %#v", errs)
 	}
 
 	errs = ValidateService(&api.Service{
 		Port:     6502,
-		JSONBase: api.JSONBase{ID: "foo"},
+		JSONBase: api.JSONBase{ID: "foo", Namespace: "default"},
 	})
 	if len(errs) != 1 {
 		t.Errorf("Unexpected error list: %#v", errs)
 	}
 
 	errs = ValidateService(&api.Service{})
-	if len(errs) != 3 {
+	if len(errs) != 4 {
 		t.Errorf("Unexpected error list: %#v", errs)
 	}
 }
@@ -382,14 +383,14 @@ func TestValidateReplicationController(t *testing.T) {
 
 	successCases := []api.ReplicationController{
 		{
-			JSONBase: api.JSONBase{ID: "abc"},
+			JSONBase: api.JSONBase{ID: "abc", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				ReplicaSelector: validSelector,
 				PodTemplate:     validPodTemplate,
 			},
 		},
 		{
-			JSONBase: api.JSONBase{ID: "abc-123"},
+			JSONBase: api.JSONBase{ID: "abc-123", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				ReplicaSelector: validSelector,
 				PodTemplate:     validPodTemplate,
@@ -404,33 +405,33 @@ func TestValidateReplicationController(t *testing.T) {
 
 	errorCases := map[string]api.ReplicationController{
 		"zero-length ID": {
-			JSONBase: api.JSONBase{ID: ""},
+			JSONBase: api.JSONBase{ID: "", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				ReplicaSelector: validSelector,
 				PodTemplate:     validPodTemplate,
 			},
 		},
 		"empty selector": {
-			JSONBase: api.JSONBase{ID: "abc"},
+			JSONBase: api.JSONBase{ID: "abc", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				PodTemplate: validPodTemplate,
 			},
 		},
 		"selector_doesnt_match": {
-			JSONBase: api.JSONBase{ID: "abc"},
+			JSONBase: api.JSONBase{ID: "abc", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				ReplicaSelector: map[string]string{"foo": "bar"},
 				PodTemplate:     validPodTemplate,
 			},
 		},
 		"invalid manifest": {
-			JSONBase: api.JSONBase{ID: "abc"},
+			JSONBase: api.JSONBase{ID: "abc", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				ReplicaSelector: validSelector,
 			},
 		},
 		"negative_replicas": {
-			JSONBase: api.JSONBase{ID: "abc"},
+			JSONBase: api.JSONBase{ID: "abc", Namespace: "default"},
 			DesiredState: api.ReplicationControllerState{
 				Replicas:        -1,
 				ReplicaSelector: validSelector,

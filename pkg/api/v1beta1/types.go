@@ -17,10 +17,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	"github.com/fsouza/go-dockerclient"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
+	"github.com/fsouza/go-dockerclient"
 )
 
 // Common string formats
@@ -247,6 +247,7 @@ type JSONBase struct {
 	SelfLink          string    `json:"selfLink,omitempty" yaml:"selfLink,omitempty"`
 	ResourceVersion   uint64    `json:"resourceVersion,omitempty" yaml:"resourceVersion,omitempty"`
 	APIVersion        string    `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	Namespace         string    `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 func (*JSONBase) IsAnAPIObject() {}

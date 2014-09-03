@@ -3,6 +3,7 @@
   "kind": "Service",
   "apiVersion": "v1beta1",
   "port": 8000,
+  "namespace": "default",
   "labels": {
      "name": "nginx"
   },

@@ -252,6 +252,13 @@ func ValidatePod(pod *api.Pod) errs.ErrorList {
 	allErrs := errs.ErrorList{}
 	if len(pod.ID) == 0 {
 		allErrs = append(allErrs, errs.NewFieldRequired("id", pod.ID))
+	} else if !util.IsDNS952Label(pod.ID) {
+		allErrs = append(allErrs, errs.NewFieldInvalid("id", pod.ID))
+	}
+	if len(pod.Namespace) == 0 {
+		allErrs = append(allErrs, errs.NewFieldRequired("namespace", pod.Namespace))
+	} else if !util.IsDNS952Label(pod.Namespace) {
+		allErrs = append(allErrs, errs.NewFieldInvalid("namespace", pod.Namespace))
 	}
 	allErrs = append(allErrs, ValidatePodState(&pod.DesiredState).Prefix("desiredState")...)
 	return allErrs
@@ -264,6 +271,11 @@ func ValidateService(service *api.Service) errs.ErrorList {
 		allErrs = append(allErrs, errs.NewFieldRequired("id", service.ID))
 	} else if !util.IsDNS952Label(service.ID) {
 		allErrs = append(allErrs, errs.NewFieldInvalid("id", service.ID))
+	}
+	if len(service.Namespace) == 0 {
+		allErrs = append(allErrs, errs.NewFieldRequired("namespace", service.Namespace))
+	} else if !util.IsDNS952Label(service.ID) {
+		allErrs = append(allErrs, errs.NewFieldInvalid("namespace", service.Namespace))
 	}
 	if !util.IsValidPortNum(service.Port) {
 		allErrs = append(allErrs, errs.NewFieldInvalid("Service.Port", service.Port))
@@ -279,6 +291,13 @@ func ValidateReplicationController(controller *api.ReplicationController) errs.E
 	allErrs := errs.ErrorList{}
 	if len(controller.ID) == 0 {
 		allErrs = append(allErrs, errs.NewFieldRequired("id", controller.ID))
+	} else if !util.IsDNS952Label(controller.ID) {
+		allErrs = append(allErrs, errs.NewFieldInvalid("id", controller.ID))
+	}
+	if len(controller.Namespace) == 0 {
+		allErrs = append(allErrs, errs.NewFieldRequired("namespace", controller.Namespace))
+	} else if !util.IsDNS952Label(controller.Namespace) {
+		allErrs = append(allErrs, errs.NewFieldInvalid("namespace", controller.Namespace))
 	}
 	if labels.Set(controller.DesiredState.ReplicaSelector).AsSelector().Empty() {
 		allErrs = append(allErrs, errs.NewFieldRequired("desiredState.replicaSelector", controller.DesiredState.ReplicaSelector))

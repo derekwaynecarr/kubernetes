@@ -56,6 +56,8 @@ var (
 	templateFile  = flag.String("template_file", "", "If present, load this file as a golang template and use it for output printing")
 	templateStr   = flag.String("template", "", "If present, parse this string as a golang template and use it for output printing")
 	imageName     = flag.String("image", "", "Image used when updating a replicationController.  Will apply to the first container in the pod template.")
+	ns            = flag.String("ns", "", "If present, the namespace scope for this request.")
+	nsFile        = flag.String("ns_file", os.Getenv("HOME")+"/.kubernetes_ns", "Path to the namespace file.")
 )
 
 var parser = kubecfg.NewParser(map[string]runtime.Object{
@@ -83,7 +85,9 @@ on the given image:
 
   kubecfg [OPTIONS] [-p <port spec>] run <image> <replicas> <controller>
 
-Options:
+Manage namespace:
+  kubecfg [OPTIONS] ns [<namespace>]
+
 `, prettyWireStorage())
 	flag.PrintDefaults()
 
@@ -186,7 +190,7 @@ func main() {
 	}
 	method := flag.Arg(0)
 
-	matchFound := executeAPIRequest(method, kubeClient) || executeControllerRequest(method, kubeClient)
+	matchFound := executeAPIRequest(method, kubeClient) || executeControllerRequest(method, kubeClient) || executeNamespaceRequest(method, kubeClient)
 	if matchFound == false {
 		glog.Fatalf("Unknown command %s", method)
 	}
@@ -374,6 +378,33 @@ func executeControllerRequest(method string, c *client.Client) bool {
 	if err != nil {
 		glog.Fatalf("Error: %v", err)
 	}
+	return true
+}
+
+// executeNamespaceRequest handles client operations for namespaces
+func executeNamespaceRequest(method string, c *client.Client) bool {
+	var err error
+	var ns *client.NamespaceInfo
+	switch method {
+	case "ns":
+		args := flag.Args()
+		switch len(args) {
+		case 1:
+			ns, err = kubecfg.LoadNamespaceInfo(*nsFile, os.Stdin)
+		case 2:
+			ns = &client.NamespaceInfo{Namespace: args[1]}
+			err = kubecfg.SaveNamespaceInfo(*nsFile, ns)
+		default:
+			glog.Fatalf("usage: kubecfg ns [<namespace>]")
+		}
+	default:
+		return false
+	}
+	if err != nil {
+		glog.Fatalf("Error: %v", err)
+	}
+	fmt.Print("Using namespace ", ns.Namespace)
+	fmt.Print("\n")
 	return true
 }
 

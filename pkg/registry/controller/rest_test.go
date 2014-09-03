@@ -233,7 +233,7 @@ func TestCreateController(t *testing.T) {
 		pollPeriod: time.Millisecond * 1,
 	}
 	controller := &api.ReplicationController{
-		JSONBase: api.JSONBase{ID: "test"},
+		JSONBase: api.JSONBase{ID: "test", Namespace: "default"},
 		DesiredState: api.ReplicationControllerState{
 			Replicas:        2,
 			ReplicaSelector: map[string]string{"a": "b"},

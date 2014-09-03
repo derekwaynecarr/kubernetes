@@ -1,5 +1,6 @@
 {
   "id": "redis-master-2",
+  "namespace": "default",
   "kind": "Pod",
   "apiVersion": "v1beta1",
   "desiredState": {

@@ -1,5 +1,6 @@
 {
   "id": "redisSlaveController",
+  "namespace": "default",
   "kind": "ReplicationController",
   "apiVersion": "v1beta1",
   "desiredState": {
