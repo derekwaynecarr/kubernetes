@@ -30,47 +30,67 @@ import (
 // an interface to allow mock testing.
 // TODO: these should return/take pointers.
 type Interface interface {
-	PodInterface
-	ReplicationControllerInterface
-	ServiceInterface
+	PodsByNamespace
+	ReplicationControllersByNamespace
+	ServicesByNamespace
 	VersionInterface
 	MinionInterface
 }
 
+// PodsByNamespace has methods to work with Pod resources scoped to a particular namespace
+type PodsByNamespace interface {
+	Pods(namespace string) PodInterface
+}
+
 // PodInterface has methods to work with Pod resources.
 type PodInterface interface {
-	ListPods(ctx api.Context, selector labels.Selector) (*api.PodList, error)
-	GetPod(ctx api.Context, id string) (*api.Pod, error)
-	DeletePod(ctx api.Context, id string) error
-	CreatePod(ctx api.Context, pod *api.Pod) (*api.Pod, error)
-	UpdatePod(ctx api.Context, pod *api.Pod) (*api.Pod, error)
+	List(selector labels.Selector) (*api.PodList, error)
+	Get(id string) (*api.Pod, error)
+	Delete(id string) error
+	Create(pod *api.Pod) (*api.Pod, error)
+	Update(pod *api.Pod) (*api.Pod, error)
+}
+
+// ReplicationControllersByNamespace has methods to work with ReplicationController resources scoped to a particular namespace
+type ReplicationControllersByNamespace interface {
+	ReplicationControllers(namespace string) ReplicationControllerInterface
 }
 
 // ReplicationControllerInterface has methods to work with ReplicationController resources.
 type ReplicationControllerInterface interface {
-	ListReplicationControllers(ctx api.Context, selector labels.Selector) (*api.ReplicationControllerList, error)
-	GetReplicationController(ctx api.Context, id string) (*api.ReplicationController, error)
-	CreateReplicationController(ctx api.Context, ctrl *api.ReplicationController) (*api.ReplicationController, error)
-	UpdateReplicationController(ctx api.Context, ctrl *api.ReplicationController) (*api.ReplicationController, error)
-	DeleteReplicationController(ctx api.Context, id string) error
-	WatchReplicationControllers(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)
+	List(selector labels.Selector) (*api.ReplicationControllerList, error)
+	Get(id string) (*api.ReplicationController, error)
+	Create(ctrl *api.ReplicationController) (*api.ReplicationController, error)
+	Update(ctrl *api.ReplicationController) (*api.ReplicationController, error)
+	Delete(id string) error
+	Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)
+}
+
+// ServicesByNamespace has methods to work with Service resources scoped to a particular namespace
+type ServicesByNamespace interface {
+	Services(namespace string) ServiceInterface
 }
 
 // ServiceInterface has methods to work with Service resources.
 type ServiceInterface interface {
-	ListServices(ctx api.Context, selector labels.Selector) (*api.ServiceList, error)
-	GetService(ctx api.Context, id string) (*api.Service, error)
-	CreateService(ctx api.Context, srv *api.Service) (*api.Service, error)
-	UpdateService(ctx api.Context, srv *api.Service) (*api.Service, error)
-	DeleteService(ctx api.Context, id string) error
-	WatchServices(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)
+	List(ctx api.Context, selector labels.Selector) (*api.ServiceList, error)
+	Get(id string) (*api.Service, error)
+	Create(srv *api.Service) (*api.Service, error)
+	Update(srv *api.Service) (*api.Service, error)
+	Delete(id string) error
+	Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)
+}
+
+// EndpointsByNamespace has methods to work with Endpoint resources scoped to a particular namespace
+type EndpointsByNamespace interface {
+	Endpoint(namespace string) EndpointsInterface
 }
 
 // EndpointsInterface has methods to work with Endpoints resources
 type EndpointsInterface interface {
-	ListEndpoints(ctx api.Context, selector labels.Selector) (*api.EndpointsList, error)
-	GetEndpoints(ctx api.Context, id string) (*api.Endpoints, error)
-	WatchEndpoints(ctx api.Context, label, field labels.Selector, resourceVersion string) (watch.Interface, error)
+	List(selector labels.Selector) (*api.EndpointsList, error)
+	Get(id string) (*api.Endpoints, error)
+	Watch(label, field labels.Selector, resourceVersion string) (watch.Interface, error)
 }
 
 // EventInterface has methods to work with Event resources
