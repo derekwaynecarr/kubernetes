@@ -55,6 +55,8 @@ Find more information at https://github.com/GoogleCloudPlatform/kubernetes.`,
 	cmds.PersistentFlags().String("client-certificate", "", "Path to a client certificate for TLS.")
 	cmds.PersistentFlags().String("client-key", "", "Path to a client key file for TLS.")
 	cmds.PersistentFlags().Bool("insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure.")
+	cmds.PersistentFlags().StringP("ns-path", "n", os.Getenv("HOME")+"/.kubernetes_ns", "Path to the namespace info file that holds the namespace context to use for CLI requests.")
+	cmds.PersistentFlags().String("ns", "", "If present, the namespace scope for this CLI request.")
 
 	cmds.AddCommand(NewCmdVersion(out))
 	cmds.AddCommand(NewCmdProxy(out))
@@ -63,6 +65,7 @@ Find more information at https://github.com/GoogleCloudPlatform/kubernetes.`,
 	cmds.AddCommand(NewCmdCreate(out))
 	cmds.AddCommand(NewCmdUpdate(out))
 	cmds.AddCommand(NewCmdDelete(out))
+	cmds.AddCommand(NewCmdNamespace(out))
 
 	if err := cmds.Execute(); err != nil {
 		os.Exit(1)
