@@ -136,7 +136,8 @@ func (r *Request) Namespace(namespace string) *Request {
 		return r
 	}
 	if len(namespace) > 0 {
-		return r.setParam("namespace", namespace)
+		return r.Path("ns").Path(namespace)
+		//return r.setParam("namespace", namespace)
 	}
 	return r
 }

@@ -23,6 +23,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/auth/authorizer"
 	authhandlers "github.com/GoogleCloudPlatform/kubernetes/pkg/auth/handlers"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/httplog"
@@ -207,4 +208,47 @@ func WithAuthorizationCheck(handler http.Handler, getAttribs RequestAttributeGet
 		}
 		forbidden(w, req)
 	})
+}
+
+// ResourceTypeAndNamespace returns the resourceType, namespace, and namespace adjusted path parts for the request
+// 	Valid Inputs:
+//		/ns/{namespace}/{resourceType}
+//		/ns/{namespace}/{resourceType}/{resourceName}
+//		/{resourceType}
+//		/{resourceType}/{resourceName}
+//	  /{resourceType}/{resourceName}?namespace={namespace}
+//	  /{resourceType}?namespace={namespace}
+func ResourceTypeAndNamespace(req *http.Request) (namespace, resourceType string, parts []string, err error) {
+	parts = splitPath(req.URL.Path)
+	if len(parts) < 1 {
+		err = fmt.Errorf("ResourceTypeAndNamespace has an empty URL path")
+		return
+	}
+
+	// URL forms: /ns/{namespace}/{resourceType}/*, where parts are adjusted to be relative to resourceType
+	if parts[0] == "ns" {
+		if len(parts) < 3 {
+			err = fmt.Errorf("ResourceTypeAndNamespace expects a path of form /ns/{namespace}/*")
+			return
+		}
+		namespace = parts[1]
+		resourceType = parts[2]
+		parts = parts[2:]
+		return
+	}
+
+	// URL forms: /{resourceType}/*
+	// URL forms: POST /{resourceType} is a legacy API convention to create in "default" namespace
+	// URL forms: /{resourceType}/{resourceName} use the "default" namespace if omitted from query param
+	// URL forms: /{resourceType} assume cross-namespace operation if omitted from query param
+	resourceType = parts[0]
+	namespace = req.URL.Query().Get("namespace")
+	if len(namespace) == 0 {
+		if len(parts) > 1 || req.Method == "POST" {
+			namespace = api.NamespaceDefault
+		} else {
+			namespace = api.NamespaceAll
+		}
+	}
+	return
 }

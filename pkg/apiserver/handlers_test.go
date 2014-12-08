@@ -19,7 +19,10 @@ package apiserver
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 )
 
 type fakeRL bool
@@ -57,5 +60,53 @@ func TestReadOnly(t *testing.T) {
 			t.Fatalf("Couldn't make request: %v", err)
 		}
 		http.DefaultClient.Do(req)
+	}
+}
+
+func TestResourceTypeAndNamespace(t *testing.T) {
+	successCases := []struct {
+		url                  string
+		expectedNamespace    string
+		expectedResourceType string
+		expectedParts        []string
+	}{
+		{"/ns/other/pods", "other", "pods", []string{"pods"}},
+		{"/ns/other/pods/foo", "other", "pods", []string{"pods", "foo"}},
+		{"/pods", api.NamespaceAll, "pods", []string{"pods"}},
+		{"/pods/foo", api.NamespaceDefault, "pods", []string{"pods", "foo"}},
+		{"/pods/foo?namespace=other", "other", "pods", []string{"pods", "foo"}},
+		{"/pods?namespace=other", "other", "pods", []string{"pods"}},
+	}
+
+	for _, successCase := range successCases {
+		req, _ := http.NewRequest("GET", successCase.url, nil)
+		namespace, resourceType, parts, err := ResourceTypeAndNamespace(req)
+		if err != nil {
+			t.Errorf("Unexpected error for url: %s", successCase.url)
+		}
+		if successCase.expectedNamespace != namespace {
+			t.Errorf("Unexpected namespace for url: %s, expected: %s, actual: %s", successCase.url, successCase.expectedNamespace, namespace)
+		}
+		if successCase.expectedResourceType != resourceType {
+			t.Errorf("Unexpected resourceType for url: %s, expected: %s, actual: %s", successCase.url, successCase.expectedResourceType, resourceType)
+		}
+		if !reflect.DeepEqual(successCase.expectedParts, parts) {
+			t.Errorf("Unexpected parts for url: %s, expected: %v, actual: %v", successCase.url, successCase.expectedParts, parts)
+		}
+	}
+
+	errorCases := map[string]string{
+		"no resource path":      "/",
+		"missing resource type": "/ns/other",
+	}
+	for k, v := range errorCases {
+		req, err := http.NewRequest("GET", v, nil)
+		if err != nil {
+			t.Errorf("Unexpected error %v", err)
+		}
+		_, _, _, err = ResourceTypeAndNamespace(req)
+		if err == nil {
+			t.Errorf("Expected error for key: %s", k)
+		}
 	}
 }

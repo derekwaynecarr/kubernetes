@@ -221,6 +221,8 @@ func (g *APIGroupVersion) InstallREST(container *restful.Container, root string,
 
 	for path, storage := range g.handler.storage {
 		registerResourceHandlers(ws, version, path, storage, kinds, h)
+		// TODO look at handling this better?
+		registerResourceHandlers(ws, version, "ns/{namespace}/" + path, storage, kinds, h)
 	}
 
 	// TODO: port the rest of these. Sadly, if we don't, we'll have inconsistent
