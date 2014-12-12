@@ -73,9 +73,9 @@ grains:
   api_servers: '$(echo "$MASTER_IP" | sed -e "s/'/''/g")'
   cloud: vagrant
   cloud_provider: vagrant
+  admission_control: '$(echo "$ADMISSION_CONTROL" | sed -e "s/'/''/g")'
   roles:
     - kubernetes-master
-  admission_control: ResourceDefaults,AlwaysAdmit
 EOF
 
 mkdir -p /srv/salt-overlay/pillar

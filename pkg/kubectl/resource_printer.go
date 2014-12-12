@@ -221,6 +221,7 @@ var serviceColumns = []string{"NAME", "LABELS", "SELECTOR", "IP", "PORT"}
 var minionColumns = []string{"NAME", "LABELS"}
 var statusColumns = []string{"STATUS"}
 var eventColumns = []string{"TIME", "NAME", "KIND", "SUBOBJECT", "REASON", "SOURCE", "MESSAGE"}
+var resourceConrollerColumns = []string{"NAME", "LABELS"}
 
 // addDefaultHandlers adds print handlers for default Kubernetes types.
 func (h *HumanReadablePrinter) addDefaultHandlers() {
@@ -235,6 +236,8 @@ func (h *HumanReadablePrinter) addDefaultHandlers() {
 	h.Handler(statusColumns, printStatus)
 	h.Handler(eventColumns, printEvent)
 	h.Handler(eventColumns, printEventList)
+	h.Handler(resourceConrollerColumns, printResourceController)
+	h.Handler(resourceConrollerColumns, printResourceControllerList)
 }
 
 func (h *HumanReadablePrinter) unknown(data []byte, w io.Writer) error {
@@ -325,6 +328,21 @@ func printReplicationController(controller *api.ReplicationController, w io.Writ
 func printReplicationControllerList(list *api.ReplicationControllerList, w io.Writer) error {
 	for _, controller := range list.Items {
 		if err := printReplicationController(&controller, w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func printResourceController(controller *api.ResourceController, w io.Writer) error {
+	_, err := fmt.Fprintf(w, "%s\t%s\n",
+		controller.Name, formatLabels(controller.Labels))
+	return err
+}
+
+func printResourceControllerList(list *api.ResourceControllerList, w io.Writer) error {
+	for _, controller := range list.Items {
+		if err := printResourceController(&controller, w); err != nil {
 			return err
 		}
 	}

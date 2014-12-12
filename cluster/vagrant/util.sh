@@ -72,6 +72,7 @@ function create-provision-scripts {
     echo "ENABLE_NODE_LOGGING='${ENABLE_NODE_LOGGING:-false}'"
     echo "LOGGING_DESTINATION='${LOGGING_DESTINATION:-}'"
     echo "ENABLE_CLUSTER_DNS='${ENABLE_CLUSTER_DNS:-false}'"
+    echo "ADMISSION_CONTROL='${ADMISSION_CONTROL}'"
     echo "DNS_SERVER_IP='${DNS_SERVER_IP:-}'"
     echo "DNS_DOMAIN='${DNS_DOMAIN:-}'"
     grep -v "^#" "${KUBE_ROOT}/cluster/vagrant/provision-master.sh"

@@ -29,4 +29,10 @@ import (
 	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/admit"
 	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/deny"
 	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcedefaults"
+
+	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcelimits"
+	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcelimits/container"
+	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcelimits/namespace"
+	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcelimits/pod"
+	_ "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcelimits/replicationcontroller"
 )

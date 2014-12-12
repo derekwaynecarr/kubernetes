@@ -66,3 +66,6 @@ ENABLE_CLUSTER_DNS=true
 DNS_SERVER_IP="10.247.0.10"
 DNS_DOMAIN="kubernetes.local"
 DNS_REPLICAS=1
+
+# Sequence of admission control plug-ins to require
+ADMISSION_CONTROL="ResourceDefaults,ResourceLimits"

@@ -631,7 +631,9 @@ func init() {
 				}
 				if k == ResourceCPU {
 					(*out)[newer.ResourceCPU] = *resource.NewMilliQuantity(int64(fv*1000), resource.DecimalSI)
-				} else {
+				} else if k == "CPU" {
+					(*out)[newer."CPU"] = *resource.NewMilliQuantity(int64(fv*1000), resource.DecimalSI)
+				}	else {
 					(*out)[newer.ResourceName(k)] = *resource.NewQuantity(int64(fv), resource.BinarySI)
 				}
 			}

@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/labels"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/resourcecontroller"
 	"github.com/golang/glog"
 )
 
@@ -47,7 +48,10 @@ func DescriberFor(kind string, c *client.Client) (Describer, bool) {
 		return &ServiceDescriber{c}, true
 	case "Minion", "Node":
 		return &MinionDescriber{c}, true
+	case "ResourceController":
+		return &ResourceControllerDescriber{c}, true
 	}
+
 	return nil, false
 }
 
@@ -193,6 +197,91 @@ func (d *MinionDescriber) Describe(namespace, name string) (string, error) {
 		return nil
 	})
 }
+
+// ResourceControllerDescriber generates information about a resource controller
+type ResourceControllerDescriber struct {
+	client.Interface
+}
+
+type ByResourceControllerGroupBy []api.ResourceControllerGroupBy
+
+func (a ByResourceControllerGroupBy) Len() int           { return len(a) }
+func (a ByResourceControllerGroupBy) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByResourceControllerGroupBy) Less(i, j int) bool { return a[i] < a[j] }
+
+type ByResourceControllerRuleType []api.ResourceControllerRuleType
+
+func (a ByResourceControllerRuleType) Len() int           { return len(a) }
+func (a ByResourceControllerRuleType) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByResourceControllerRuleType) Less(i, j int) bool { return a[i] < a[j] }
+
+type ByResourceName []api.ResourceName
+
+func (a ByResourceName) Len() int           { return len(a) }
+func (a ByResourceName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByResourceName) Less(i, j int) bool { return a[i] < a[j] }
+
+func (d *ResourceControllerDescriber) Describe(namespace, name string) (string, error) {
+	rc := d.ResourceControllers(namespace)
+
+	controller, err := rc.Get(name)
+	if err != nil {
+		return "", err
+	}
+
+	return tabbedString(func(out io.Writer) error {
+		fmt.Fprintf(out, "Name:\t%s\n", controller.Name)
+		fmt.Fprintf(out, "GroupBy\tRuleType\tResource\tAllowed\tAllocated\n")
+		fmt.Fprintf(out, "-------\t--------\t--------\t-------\t---------\n")
+
+		allowed, allocated := resourcecontroller.AllowedAndAllocated(&controller.Status)
+
+		groupBys := []api.ResourceControllerGroupBy{}
+		for groupBy, _ := range allowed {
+			groupBys = append(groupBys, groupBy)
+		}
+		sort.Sort(ByResourceControllerGroupBy(groupBys))
+
+		for _, groupBy := range groupBys {
+
+			allowedGroup := allowed[groupBy]
+			allocatedGroup := allocated[groupBy]
+
+			if allowedGroup != nil {
+				ruleTypes := []api.ResourceControllerRuleType{}
+				for ruleType, _ := range allowedGroup {
+					ruleTypes = append(ruleTypes, ruleType)
+				}
+				sort.Sort(ByResourceControllerRuleType(ruleTypes))
+
+				for _, ruleType := range ruleTypes {
+					allowedGroupRuleType := allowedGroup[ruleType]
+					allocatedGroupRuleType := allocatedGroup[ruleType]
+
+					names := []api.ResourceName{}
+					for name, _ := range allowedGroupRuleType {
+						names = append(names, name)
+					}
+					sort.Sort(ByResourceName(names))
+
+					for _, name := range names {
+						msg := "%v\t%v\t%v\t%v\t%v\n"
+						allowedValue := allowedGroupRuleType[name]
+						allocatedValue := allocatedGroupRuleType[name]
+						fmt.Fprintf(out, msg, groupBy, ruleType, name, allowedValue.String(), allocatedValue.String())
+					}
+				}
+			}
+		}
+		return nil
+	})
+}
+
+type sortableEvents []api.Event
+
+func (s sortableEvents) Len() int           { return len(s) }
+func (s sortableEvents) Less(i, j int) bool { return s[i].Timestamp.Before(s[j].Timestamp.Time) }
+func (s sortableEvents) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 func describeEvents(el *api.EventList, w io.Writer) {
 	if len(el.Items) == 0 {

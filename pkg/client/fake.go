@@ -69,6 +69,10 @@ func (c *Fake) Services(namespace string) ServiceInterface {
 	return &FakeServices{Fake: c, Namespace: namespace}
 }
 
+func (c *Fake) ResourceControllers(namespace string) ResourceControllerInterface {
+	return &FakeResourceControllers{Fake: c, Namespace: namespace}
+}
+
 func (c *Fake) ServerVersion() (*version.Info, error) {
 	c.Actions = append(c.Actions, FakeAction{Action: "get-version", Value: nil})
 	versionInfo := version.Get()

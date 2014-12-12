@@ -47,6 +47,9 @@ func init() {
 		&BoundPod{},
 		&BoundPods{},
 		&List{},
+		&ResourceController{},
+		&ResourceControllerList{},
+		&ResourceObservation{},
 	)
 	// Legacy names are supported
 	Scheme.AddKnownTypeWithName("", "Minion", &Node{})
@@ -77,3 +80,6 @@ func (*ContainerManifestList) IsAnAPIObject()     {}
 func (*BoundPod) IsAnAPIObject()                  {}
 func (*BoundPods) IsAnAPIObject()                 {}
 func (*List) IsAnAPIObject()                      {}
+func (*ResourceController) IsAnAPIObject()        {}
+func (*ResourceControllerList) IsAnAPIObject()    {}
+func (*ResourceObservation) IsAnAPIObject()       {}

@@ -35,6 +35,15 @@ func dec(i int64, exponent int) *inf.Dec {
 	return inf.NewDec(i, inf.Scale(-exponent))
 }
 
+func TestSum(t *testing.T) {
+	cores := NewMilliQuantity(5300, DecimalSI)
+	sum := NewMilliQuantity(cores.MilliValue()+int64(500), DecimalSI)
+	foo := NewMilliQuantity(50, DecimalSI)
+	t.Errorf("cores = %v\n", foo.MilliValue())
+	t.Errorf("cores = %v\n", sum.MilliValue())
+
+}
+
 func TestDec(t *testing.T) {
 	table := []struct {
 		got    *inf.Dec

@@ -34,6 +34,7 @@ import (
 	replicationControllerPkg "github.com/GoogleCloudPlatform/kubernetes/pkg/controller"
 	_ "github.com/GoogleCloudPlatform/kubernetes/pkg/healthz"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/master/ports"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/resourcecontroller"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/service"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/version/verflag"
@@ -108,6 +109,10 @@ func main() {
 	}
 	nodeController := nodeControllerPkg.NewNodeController(cloud, *minionRegexp, machineList, nodeResources, kubeClient)
 	nodeController.Run(10 * time.Second)
+
+	observers := resourcecontroller.InitObservers(kubeClient)
+	resourceManager := resourcecontroller.NewResourceManager(kubeClient, observers)
+	resourceManager.Run(10 * time.Second)
 
 	select {}
 }

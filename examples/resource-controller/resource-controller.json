@@ -1,0 +1,60 @@
+{
+  "id": "limits",
+  "kind": "ResourceController",
+  "apiVersion": "v1beta1",
+  "spec": {
+    "allowed": [
+      {
+        "groupBy": "Namespace",
+        "ruleType": "Max",        
+        "resources": {
+          "Pods": "5",
+          "ReplicationControllers": "3",
+          "Services": "10",
+          "Memory": "6442450944",
+          "CPU": "20",
+        },
+      },
+      {
+        "groupBy": "Container",
+        "ruleType": "Max",
+        "resources": {
+          "Memory": "1073741824",
+          "CPU": "4",
+        },
+      },
+      {
+        "groupBy": "Container",
+        "ruleType": "Min",
+        "resources": {
+          "Memory": "1048576",
+          "CPU": "0",
+        },
+      },
+      {
+        "groupBy": "Pod",
+        "ruleType": "Max",        
+        "resources": {
+          "Memory": "2147483648",
+          "CPU": "8",
+        },
+      },
+      {
+        "groupBy": "Pod",
+        "ruleType": "Min",        
+        "resources": {
+          "Memory": "1048576",
+          "CPU": "0",
+        },
+      },      
+      {
+        "groupBy": "ReplicationController",
+        "ruleType": "Max",
+        "resources": {
+          "Replicas": "10",
+        }
+      }            
+    ],
+  },
+  "labels": {"name": "resourceController"}
+}

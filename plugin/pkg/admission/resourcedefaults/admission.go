@@ -33,7 +33,7 @@ func init() {
 
 const (
 	defaultMemory string = "512Mi"
-	defaultCPU    string = "1"
+	defaultCPU    string = "1000m"
 )
 
 // resourceDefaults is an implementation of admission.Interface which applies default resource limits (cpu/memory)

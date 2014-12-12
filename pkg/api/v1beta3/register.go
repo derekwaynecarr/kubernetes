@@ -48,6 +48,9 @@ func init() {
 		&Event{},
 		&EventList{},
 		&List{},
+		&ResourceController{},
+		&ResourceControllerList{},
+		&ResourceObservation{},
 	)
 	// Legacy names are supported
 	api.Scheme.AddKnownTypeWithName("v1beta3", "Minion", &Node{})
@@ -78,3 +81,6 @@ func (*OperationList) IsAnAPIObject()             {}
 func (*Event) IsAnAPIObject()                     {}
 func (*EventList) IsAnAPIObject()                 {}
 func (*List) IsAnAPIObject()                      {}
+func (*ResourceController) IsAnAPIObject()        {}
+func (*ResourceControllerList) IsAnAPIObject()    {}
+func (*ResourceObservation) IsAnAPIObject()       {}

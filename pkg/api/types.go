@@ -794,6 +794,63 @@ type NodeList struct {
 	Items []Node `json:"items"`
 }
 
+// ResourceController is an enumerated set of resources constraints enforced as part of admission control
+type ResourceController struct {
+	TypeMeta   `json:",inline"`
+	ObjectMeta `json:"metadata,omitempty"`
+	// Spec represents the imposed constraints for allowed resources
+	Spec ResourceControllerSpec `json:"spec,omitempty"`
+	// Status represents the observed allocated resources to inform constraints
+	Status ResourceControllerStatus `json:"status,omitempty"`
+}
+
+type ResourceControllerGroupBy string
+type ResourceControllerRuleType string
+
+const (
+	ResourceControllerGroupByPod                   ResourceControllerGroupBy = "Pod"
+	ResourceControllerGroupByNamespace             ResourceControllerGroupBy = "Namespace"
+	ResourceControllerGroupByContainer             ResourceControllerGroupBy = "Container"
+	ResourceControllerGroupByReplicationController ResourceControllerGroupBy = "ReplicationController"
+
+	ResourceControllerRuleTypeMin ResourceControllerRuleType = "Min"
+	ResourceControllerRuleTypeMax ResourceControllerRuleType = "Max"
+)
+
+// ResourceControllerGroup is a named grouping of a rule and resources
+type ResourceControllerGroup struct {
+	GroupBy   ResourceControllerGroupBy  `json:"groupBy,omitempty"`
+	RuleType  ResourceControllerRuleType `json:"ruleType,omitempty"`
+	Resources ResourceList               `json:"resources,omitempty"`
+}
+
+type ResourceControllerSpec struct {
+	// Allowed represents the available resources allowed in a quota
+	Allowed []ResourceControllerGroup `json:"allowed,omitempty"`
+}
+
+type ResourceControllerStatus struct {
+	// Allowed represents the available resources allowed across scopes
+	Allowed []ResourceControllerGroup `json:"allowed,omitempty"`
+	// Allocated represents the allocated resources leveraged across scopes
+	Allocated []ResourceControllerGroup `json:"allocated,omitempty"`
+}
+
+// ResourceControllerList is a collection of resource controllers.
+type ResourceControllerList struct {
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+	Items    []ResourceController `json:"items"`
+}
+
+// ResourceObservation is written to note an allocation of tracked cluster resources
+type ResourceObservation struct {
+	TypeMeta   `json:",inline"`
+	ObjectMeta `json:"metadata,omitempty"`
+
+	Status ResourceControllerStatus `json:"status,omitempty"`
+}
+
 // Binding is written by a scheduler to cause a pod to be bound to a host.
 type Binding struct {
 	TypeMeta   `json:",inline"`

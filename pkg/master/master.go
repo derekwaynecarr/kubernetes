@@ -49,6 +49,8 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/generic"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/minion"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/pod"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/resourcecontroller"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/resourceobservation"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/registry/service"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/tools"
@@ -102,16 +104,17 @@ type Config struct {
 // Master contains state for a Kubernetes cluster master/api server.
 type Master struct {
 	// "Inputs", Copied from Config
-	podRegistry        pod.Registry
-	controllerRegistry controller.Registry
-	serviceRegistry    service.Registry
-	endpointRegistry   endpoint.Registry
-	minionRegistry     minion.Registry
-	bindingRegistry    binding.Registry
-	eventRegistry      generic.Registry
-	storage            map[string]apiserver.RESTStorage
-	client             *client.Client
-	portalNet          *net.IPNet
+	podRegistry                pod.Registry
+	controllerRegistry         controller.Registry
+	serviceRegistry            service.Registry
+	endpointRegistry           endpoint.Registry
+	minionRegistry             minion.Registry
+	bindingRegistry            binding.Registry
+	eventRegistry              generic.Registry
+	resourceControllerRegistry resourcecontroller.Registry
+	storage                    map[string]apiserver.RESTStorage
+	client                     *client.Client
+	portalNet                  *net.IPNet
 
 	mux                   apiserver.Mux
 	handlerContainer      *restful.Container
@@ -240,13 +243,14 @@ func New(c *Config) *Master {
 	}
 
 	m := &Master{
-		podRegistry:           etcd.NewRegistry(c.EtcdHelper, boundPodFactory),
-		controllerRegistry:    etcd.NewRegistry(c.EtcdHelper, nil),
-		serviceRegistry:       serviceRegistry,
-		endpointRegistry:      etcd.NewRegistry(c.EtcdHelper, nil),
-		bindingRegistry:       etcd.NewRegistry(c.EtcdHelper, boundPodFactory),
-		eventRegistry:         event.NewEtcdRegistry(c.EtcdHelper, uint64(c.EventTTL.Seconds())),
-		minionRegistry:        minionRegistry,
+		podRegistry:                etcd.NewRegistry(c.EtcdHelper, boundPodFactory),
+		controllerRegistry:         etcd.NewRegistry(c.EtcdHelper, nil),
+		serviceRegistry:            serviceRegistry,
+		endpointRegistry:           etcd.NewRegistry(c.EtcdHelper, nil),
+		bindingRegistry:            etcd.NewRegistry(c.EtcdHelper, boundPodFactory),
+		eventRegistry:              event.NewEtcdRegistry(c.EtcdHelper, uint64(c.EventTTL.Seconds())),
+		minionRegistry:             minionRegistry,
+		resourceControllerRegistry: resourcecontroller.NewEtcdRegistry(c.EtcdHelper),
 		client:                c.Client,
 		portalNet:             c.PortalNet,
 		rootWebService:        new(restful.WebService),
@@ -358,7 +362,9 @@ func (m *Master) init(c *Config) {
 		"events":                 event.NewREST(m.eventRegistry),
 
 		// TODO: should appear only in scheduler API group.
-		"bindings": binding.NewREST(m.bindingRegistry),
+		"bindings":             binding.NewREST(m.bindingRegistry),
+		"resourceControllers":  resourcecontroller.NewREST(m.resourceControllerRegistry),
+		"resourceObservations": resourceobservation.NewREST(m.resourceControllerRegistry),
 	}
 
 	apiVersions := []string{"v1beta1", "v1beta2"}
