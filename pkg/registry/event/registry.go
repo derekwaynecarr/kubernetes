@@ -48,6 +48,9 @@ func NewEtcdRegistry(s storage.Interface, ttl uint64) generic.Registry {
 				return ttl, nil
 			},
 			Storage: s,
+			DeleteCollectionFunc: func(ctx api.Context) (runtime.Object, error) {
+				return etcdgeneric.DeleteCollectionPerNamespaceFunc(func() runtime.Object { return &api.EventList{} })(ctx, s, prefix)
+			},
 		},
 	}
 }

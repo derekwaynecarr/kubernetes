@@ -44,6 +44,9 @@ func NewEtcdRegistry(s storage.Interface) generic.Registry {
 				return etcdgeneric.NamespaceKeyFunc(ctx, prefix, id)
 			},
 			Storage: s,
+			DeleteCollectionFunc: func(ctx api.Context) (runtime.Object, error) {
+				return etcdgeneric.DeleteCollectionPerNamespaceFunc(func() runtime.Object { return &api.LimitRangeList{} })(ctx, s, prefix)
+			},
 		},
 	}
 }
