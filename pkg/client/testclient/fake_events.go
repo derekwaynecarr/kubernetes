@@ -27,7 +27,8 @@ import (
 // FakeEvents implements EventInterface. Meant to be embedded into a struct to get a default
 // implementation. This makes faking out just the method you want to test easier.
 type FakeEvents struct {
-	Fake *Fake
+	Fake      *Fake
+	Namespace string
 }
 
 // Get returns the given event, or an error.
@@ -92,7 +93,7 @@ func (c *FakeEvents) Search(objOrRef runtime.Object) (*api.EventList, error) {
 }
 
 func (c *FakeEvents) DeleteAll() error {
-	_, err := c.Fake.Invokes(NewDeleteAllAction(), &api.Event{})
+	_, err := c.Fake.Invokes(NewDeleteAllAction("events", c.Namespace), &api.Event{})
 	return err
 }
 
