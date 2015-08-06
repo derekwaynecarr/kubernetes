@@ -208,127 +208,64 @@ func syncNamespace(kubeClient client.Interface, namespace api.Namespace) (err er
 }
 
 func deleteLimitRanges(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.LimitRanges(ns).List(labels.Everything())
-	if err != nil {
+	if err := kubeClient.LimitRanges(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.LimitRanges(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deleteResourceQuotas(kubeClient client.Interface, ns string) error {
-	resourceQuotas, err := kubeClient.ResourceQuotas(ns).List(labels.Everything())
-	if err != nil {
+	if err := kubeClient.ResourceQuotas(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range resourceQuotas.Items {
-		err := kubeClient.ResourceQuotas(ns).Delete(resourceQuotas.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deleteServiceAccounts(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.ServiceAccounts(ns).List(labels.Everything(), fields.Everything())
-	if err != nil {
+	if err := kubeClient.ServiceAccounts(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.ServiceAccounts(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deleteServices(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.Services(ns).List(labels.Everything())
-	if err != nil {
+	if err := kubeClient.Services(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.Services(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deleteReplicationControllers(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.ReplicationControllers(ns).List(labels.Everything())
-	if err != nil {
+	if err := kubeClient.ReplicationControllers(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.ReplicationControllers(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deletePods(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.Pods(ns).List(labels.Everything(), fields.Everything())
-	if err != nil {
+	if err := kubeClient.Pods(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.Pods(ns).Delete(items.Items[i].Name, nil)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deleteEvents(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.Events(ns).List(labels.Everything(), fields.Everything())
-	if err != nil {
+	if err := kubeClient.Events(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.Events(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deleteSecrets(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.Secrets(ns).List(labels.Everything(), fields.Everything())
-	if err != nil {
+	if err := kubeClient.Secrets(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.Secrets(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
 
 func deletePersistentVolumeClaims(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.PersistentVolumeClaims(ns).List(labels.Everything(), fields.Everything())
-	if err != nil {
+	if err := kubeClient.PersistentVolumeClaims(ns).DeleteAll(); err != nil {
 		return err
-	}
-	for i := range items.Items {
-		err := kubeClient.PersistentVolumeClaims(ns).Delete(items.Items[i].Name)
-		if err != nil && !errors.IsNotFound(err) {
-			return err
-		}
 	}
 	return nil
 }
