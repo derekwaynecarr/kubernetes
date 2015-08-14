@@ -56,6 +56,9 @@ func NewStorage(s storage.Interface, ttl uint64) *REST {
 		CreateStrategy: event.Strategy,
 		UpdateStrategy: event.Strategy,
 
+		DeleteCollectionFunc: func(ctx api.Context) (runtime.Object, error) {
+			return etcdgeneric.DeleteCollectionPerNamespaceFunc(func() runtime.Object { return &api.EventList{} })(ctx, s, prefix)
+		},
 		Storage: s,
 	}
 	return &REST{store}

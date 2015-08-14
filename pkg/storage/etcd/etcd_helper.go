@@ -160,6 +160,7 @@ func (h *etcdHelper) Set(key string, obj, out runtime.Object, ttl uint64) error 
 func (h *etcdHelper) Delete(key string, out runtime.Object) error {
 	key = h.prefixEtcdKey(key)
 	if _, err := conversion.EnforcePtr(out); err != nil {
+		fmt.Printf("%v", err)
 		panic("unable to convert output object to pointer")
 	}
 
@@ -171,6 +172,18 @@ func (h *etcdHelper) Delete(key string, out runtime.Object) error {
 		if err != nil || response.PrevNode != nil {
 			_, _, err = h.extractObj(response, err, out, false, true)
 		}
+	}
+	return err
+}
+
+// Implements storage.Interface.
+func (h *etcdHelper) DeleteCollection(key string) error {
+	key = h.prefixEtcdKey(key)
+	startTime := time.Now()
+	_, err := h.client.Delete(key, true)
+	metrics.RecordEtcdRequestLatency("deleteCollection", key, startTime)
+	if IsEtcdNotFound(err) {
+		return nil
 	}
 	return err
 }

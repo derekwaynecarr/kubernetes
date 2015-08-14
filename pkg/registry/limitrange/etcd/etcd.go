@@ -54,6 +54,9 @@ func NewStorage(s storage.Interface) *REST {
 		UpdateStrategy: limitrange.Strategy,
 
 		Storage: s,
+		DeleteCollectionFunc: func(ctx api.Context) (runtime.Object, error) {
+			return etcdgeneric.DeleteCollectionPerNamespaceFunc(func() runtime.Object { return &api.LimitRangeList{} })(ctx, s, prefix)
+		},
 	}
 	return &REST{store}
 }

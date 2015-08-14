@@ -74,6 +74,9 @@ func NewStorage(s storage.Interface, k client.ConnectionInfoGetter) PodStorage {
 		PredicateFunc: func(label labels.Selector, field fields.Selector) generic.Matcher {
 			return pod.MatchPod(label, field)
 		},
+		DeleteCollectionFunc: func(ctx api.Context) (runtime.Object, error) {
+			return etcdgeneric.DeleteCollectionPerNamespaceFunc(func() runtime.Object { return &api.PodList{} })(ctx, s, prefix)
+		},
 		EndpointName: "pods",
 
 		Storage: s,

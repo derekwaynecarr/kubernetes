@@ -38,6 +38,8 @@ type Registry interface {
 	UpdatePod(ctx api.Context, pod *api.Pod) error
 	// Delete an existing pod
 	DeletePod(ctx api.Context, podID string) error
+	// Delete all pods in given context
+	DeleteAllPods(ctx api.Context) error
 }
 
 // storage puts strong typing around storage calls
@@ -83,5 +85,10 @@ func (s *storage) UpdatePod(ctx api.Context, pod *api.Pod) error {
 
 func (s *storage) DeletePod(ctx api.Context, podID string) error {
 	_, err := s.Delete(ctx, podID, nil)
+	return err
+}
+
+func (s *storage) DeleteAllPods(ctx api.Context) error {
+	_, err := s.DeleteCollection(ctx)
 	return err
 }
