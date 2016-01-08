@@ -4,8 +4,6 @@
 
 **Status**: Proposed
 
-This document presents a specification for how the `kubelet` interfaces with `systemd`.
-
 ## Motivation
 
 Many Linux distributions have either adopted, or plan to adopt `systemd` as their init system.
@@ -17,7 +15,9 @@ integrate with these distributions independent of their chosen container runtime
 
 This proposal does not account for running the `kubelet` in a container.
 
-## systemd units
+## Background on systemd
+
+### systemd units
 
 To help understand this proposal, we first provide a brief summary of `systemd` behavior.
 
@@ -33,9 +33,9 @@ contain `slice`, `scope`, or `service` units; processes are attached to `service
 units only, not to `slices`. The hierarchy is intended to be unified, meaning a process may
 only belong to a single leaf node.
 
-## cgroup hierarchy: orthogonal versus unified hierarchies and cgroupfs single writer
+## cgroup hierarchy: split versus unified hierarchies
 
-Classical `cgroup` hierarchies were orthogonal per resource group controller, and a process could
+Classical `cgroup` hierarchies were split per resource group controller, and a process could
 exist in different parts of the hierarchy.
 
 For example, a process `p1` could exist in each of the following at the same time:
@@ -61,8 +61,18 @@ per-controller hierarchies are eliminated in favor of hierarchies like the follo
 
 In a unified hierarchy, a process may only belong to a single node in the `cgroup` tree.
 
+## cgroupfs single writer
+
 The Kernel direction for `cgroup` management is to promote a single-writer model rather than
 allowing multiple processes to independently write to parts of the file-system.
+
+In distributions that run `systemd` as their init system, the cgroup tree is managed by `systemd`
+by default since it implicitly interacts with the cgroup tree when starting units.  Manual changes
+made by other cgroup managers to the cgroup tree are not guaranteed to be preserved unless `systemd`
+is made aware.  `systemd` can be told to ignore sections of the cgroup tree by configuring the unit
+to have the `Delegate=` option.
+
+See: http://www.freedesktop.org/software/systemd/man/systemd.resource-control.html#Delegate=
 
 ## cgroup management with systemd and container runtimes
 
@@ -78,7 +88,9 @@ For example, the `system-foo.slice` is represented as follows:
 
 `/sys/fs/cgroup/<controller>/system.slice/system-foo.slice/`
 
-A `service` or `scope` corresponds to leaf nodes in the `cgroup` file-system hierarchy.
+A `service` or `scope` corresponds to leaf nodes in the `cgroup` file-system hierarchy managed by
+`systemd`. Services and scopes can have child nodes managed outside of `systemd` if they have been
+delegated with the `Delegate=` option.
 
 For example, if the `docker.service` is associated with the `system.slice`, it is
 represented as follows:
@@ -100,25 +112,60 @@ found in `machine.slice`, and user sessions handled by `systemd-logind` in `user
 
 ## kubelet cgroup driver
 
-The current implementation of the `kubelet` reads and writes to the `cgroup` file-system
-directly during initial bootstrapping in ways that are not appropriate for `systemd`
-systems.
+The `kubelet` reads and writes to the `cgroup` tree during initial bootstrapping
+of the node.  In the future, it write to the `cgroup` tree to satisfy other purposes
+around quality of service, etc.
 
-This proposal proposes that the `kubelet` accept a new flag:
+The `kubelet` must cooperate with `systemd` in order to ensure proper function of the
+system.  The bootstrapping requirements for a `systemd` system are different than one
+without it.
 
-* `--cgroup-driver="":` - cgroup driver used by the kubelet.
-Possible values: `cgroupfs` or `systemd`.
+The `kubelet` will accept a new flag to control how it interacts with the `cgroup` tree.
 
-The `ContainerManager` interface should support an implementation per driver option.
-
-Shared code across implementations should be split into a common location.
+* `--cgroup-driver=` - cgroup driver used by the kubelet. `cgroupfs` or `systemd`.
 
 By default, the `kubelet` should default `--cgroup-driver` to `systemd` on `systemd` distributions.
 
 ## kubelet cgroup bootstrapping under systemd
 
+To facilitate understanding, the following block-level architecture will be used to
+reference 
+
 The following sections outline how a `systemd` system supports local node accounting
 requirements.
+
+###
+
+```
+                +--------------+
+                | Pod Lifecycle|
+                | Manager      |
+                +----^----+----+
+                     |    |
+                     |    |
++----------+       +-+----v---+
+|          |       |          |
+|  Node    +-------> Container|
+|  Manager |       | Manager  |
++---+------+       +-----+----+
+    |                    |
+    |                    |
+    |  +-----------------+
+    |  |                 |
+    |  |                 |
++---v--v--+        +-----v----+
+| cgroups |        | container|
+| library |        | runtimes |
++---+-----+        +-----+----+
+    |                    |
+    |                    |
+    +---------+----------+
+              |
+              |
+  +-----------v-----------+
+  |     Linux Kernel      |
+  +-----------------------+
+```
 
 ### Node capacity
 
@@ -170,7 +217,7 @@ kubernetes-reserved observed usage.
 If the `kubelet` is parented by a `slice` that is categorized as system-reserved,
 the `kubelet` will log a warning that kubernetes-reserved observed usage accounting is
 disabled, but the static reservation is still observed for purposes of reporting the
-allocable resources for the node.
+allocatable resources for the node.
 
 If the `kubelet` is launched directly from a terminal, it's most likely destination will
 be in a `scope` that is a child of `user.slice` as follows:
@@ -203,16 +250,17 @@ the `service` unit that launches `docker`.  The `kubelet` will not set any limit
 at this time and will assume whatever budget was set aside for `docker` was included in
 either `--kube-reserved` or `--system-reserved` reservations.
 
-**Rocket**
+**rkt**
 
-Rocket has no client/server daemon, and therefore has no explicit requirements on container-runtime
+rkt has no client/server daemon, and therefore has no explicit requirements on container-runtime
 reservation.
 
-### Node allocable
+### Node allocatable
 
-The proposal makes no changes to the definition.
+The proposal makes no changes to the definition as presented here:
+https://github.com/kubernetes/kubernetes/blob/master/docs/proposals/node-allocatable.md
 
-The node will report a set of allocable compute resources defined as follows:
+The node will report a set of allocatable compute resources defined as follows:
 
 `[Allocatable] = [Node Capacity] - [Kube-Reserved] - [System-Reserved]`
 
@@ -229,9 +277,8 @@ The `kubelet` will set the following:
 
 * `sysctl -w vm.overcommit_memory=1`
 * `sysctl -w vm.panic_on_oom=0`
-* `sysctl -w vm.overcommit_memory=1`
-* `sysctl -w kernel/panic=1`
-* `sysctl -w kernel/panic_on_oops=10`
+* `sysctl -w kernel/panic=10`
+* `sysctl -w kernel/panic_on_oops=1`
 
 ## kubelet cgroup-root behavior under systemd
 
@@ -266,8 +313,9 @@ this can be revisited if/when the project adopts docker 1.10.
 ### Ability to distinguish user-reserved from system-reserved
 
 It is impractical to assume that all operators will never have to SSH into machines to debug their
-own agents on the system.  On `systemd` environments, user sessions are tracked in `user.slice`.
-This slice is not currently being monitored by the `kubelet`, and the `kubelet` is not allowing
+own agents on the system.  On `systemd` environments with `pam_systemd`, user sessions are tracked
+in `user.slice`. This slice is not currently being monitored by the `kubelet`, and the `kubelet` is
+not allowing
 any amount of reservation to be made for this `slice` to restrict operator action when directly
 on the node. In future iterations of this specification, we may want to introduce reserving a
 specific amount of resource on the node for this need separate from `--system-reserved` especially
