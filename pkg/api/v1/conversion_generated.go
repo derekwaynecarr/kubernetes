@@ -848,6 +848,58 @@ func Convert_api_FCVolumeSource_To_v1_FCVolumeSource(in *api.FCVolumeSource, out
 	return autoConvert_api_FCVolumeSource_To_v1_FCVolumeSource(in, out, s)
 }
 
+func autoConvert_api_FieldSelector_To_v1_FieldSelector(in *api.FieldSelector, out *FieldSelector, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*api.FieldSelector))(in)
+	}
+	out.Kind = in.Kind
+	out.APIVersion = in.APIVersion
+	if in.MatchFields != nil {
+		out.MatchFields = make(map[string]string)
+		for key, val := range in.MatchFields {
+			out.MatchFields[key] = val
+		}
+	} else {
+		out.MatchFields = nil
+	}
+	if in.MatchExpressions != nil {
+		out.MatchExpressions = make([]FieldSelectorRequirement, len(in.MatchExpressions))
+		for i := range in.MatchExpressions {
+			if err := Convert_api_FieldSelectorRequirement_To_v1_FieldSelectorRequirement(&in.MatchExpressions[i], &out.MatchExpressions[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
+	return nil
+}
+
+func Convert_api_FieldSelector_To_v1_FieldSelector(in *api.FieldSelector, out *FieldSelector, s conversion.Scope) error {
+	return autoConvert_api_FieldSelector_To_v1_FieldSelector(in, out, s)
+}
+
+func autoConvert_api_FieldSelectorRequirement_To_v1_FieldSelectorRequirement(in *api.FieldSelectorRequirement, out *FieldSelectorRequirement, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*api.FieldSelectorRequirement))(in)
+	}
+	out.FieldPath = in.FieldPath
+	out.Operator = FieldSelectorOperator(in.Operator)
+	if in.Values != nil {
+		out.Values = make([]string, len(in.Values))
+		for i := range in.Values {
+			out.Values[i] = in.Values[i]
+		}
+	} else {
+		out.Values = nil
+	}
+	return nil
+}
+
+func Convert_api_FieldSelectorRequirement_To_v1_FieldSelectorRequirement(in *api.FieldSelectorRequirement, out *FieldSelectorRequirement, s conversion.Scope) error {
+	return autoConvert_api_FieldSelectorRequirement_To_v1_FieldSelectorRequirement(in, out, s)
+}
+
 func autoConvert_api_FlexVolumeSource_To_v1_FlexVolumeSource(in *api.FlexVolumeSource, out *FlexVolumeSource, s conversion.Scope) error {
 	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
 		defaulting.(func(*api.FlexVolumeSource))(in)
@@ -2609,6 +2661,15 @@ func autoConvert_api_ResourceQuotaSpec_To_v1_ResourceQuotaSpec(in *api.ResourceQ
 	} else {
 		out.Hard = nil
 	}
+	// unable to generate simple pointer conversion for api.FieldSelector -> v1.FieldSelector
+	if in.FieldSelector != nil {
+		out.FieldSelector = new(FieldSelector)
+		if err := Convert_api_FieldSelector_To_v1_FieldSelector(in.FieldSelector, out.FieldSelector, s); err != nil {
+			return err
+		}
+	} else {
+		out.FieldSelector = nil
+	}
 	return nil
 }
 
@@ -4075,6 +4136,58 @@ func autoConvert_v1_FCVolumeSource_To_api_FCVolumeSource(in *FCVolumeSource, out
 
 func Convert_v1_FCVolumeSource_To_api_FCVolumeSource(in *FCVolumeSource, out *api.FCVolumeSource, s conversion.Scope) error {
 	return autoConvert_v1_FCVolumeSource_To_api_FCVolumeSource(in, out, s)
+}
+
+func autoConvert_v1_FieldSelector_To_api_FieldSelector(in *FieldSelector, out *api.FieldSelector, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*FieldSelector))(in)
+	}
+	out.Kind = in.Kind
+	out.APIVersion = in.APIVersion
+	if in.MatchFields != nil {
+		out.MatchFields = make(map[string]string)
+		for key, val := range in.MatchFields {
+			out.MatchFields[key] = val
+		}
+	} else {
+		out.MatchFields = nil
+	}
+	if in.MatchExpressions != nil {
+		out.MatchExpressions = make([]api.FieldSelectorRequirement, len(in.MatchExpressions))
+		for i := range in.MatchExpressions {
+			if err := Convert_v1_FieldSelectorRequirement_To_api_FieldSelectorRequirement(&in.MatchExpressions[i], &out.MatchExpressions[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
+	return nil
+}
+
+func Convert_v1_FieldSelector_To_api_FieldSelector(in *FieldSelector, out *api.FieldSelector, s conversion.Scope) error {
+	return autoConvert_v1_FieldSelector_To_api_FieldSelector(in, out, s)
+}
+
+func autoConvert_v1_FieldSelectorRequirement_To_api_FieldSelectorRequirement(in *FieldSelectorRequirement, out *api.FieldSelectorRequirement, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*FieldSelectorRequirement))(in)
+	}
+	out.FieldPath = in.FieldPath
+	out.Operator = api.FieldSelectorOperator(in.Operator)
+	if in.Values != nil {
+		out.Values = make([]string, len(in.Values))
+		for i := range in.Values {
+			out.Values[i] = in.Values[i]
+		}
+	} else {
+		out.Values = nil
+	}
+	return nil
+}
+
+func Convert_v1_FieldSelectorRequirement_To_api_FieldSelectorRequirement(in *FieldSelectorRequirement, out *api.FieldSelectorRequirement, s conversion.Scope) error {
+	return autoConvert_v1_FieldSelectorRequirement_To_api_FieldSelectorRequirement(in, out, s)
 }
 
 func autoConvert_v1_FlexVolumeSource_To_api_FlexVolumeSource(in *FlexVolumeSource, out *api.FlexVolumeSource, s conversion.Scope) error {
@@ -5750,6 +5863,15 @@ func autoConvert_v1_ResourceQuotaSpec_To_api_ResourceQuotaSpec(in *ResourceQuota
 	if err := s.Convert(&in.Hard, &out.Hard, 0); err != nil {
 		return err
 	}
+	// unable to generate simple pointer conversion for v1.FieldSelector -> api.FieldSelector
+	if in.FieldSelector != nil {
+		out.FieldSelector = new(api.FieldSelector)
+		if err := Convert_v1_FieldSelector_To_api_FieldSelector(in.FieldSelector, out.FieldSelector, s); err != nil {
+			return err
+		}
+	} else {
+		out.FieldSelector = nil
+	}
 	return nil
 }
 
@@ -6366,6 +6488,8 @@ func init() {
 		autoConvert_api_Event_To_v1_Event,
 		autoConvert_api_ExecAction_To_v1_ExecAction,
 		autoConvert_api_FCVolumeSource_To_v1_FCVolumeSource,
+		autoConvert_api_FieldSelectorRequirement_To_v1_FieldSelectorRequirement,
+		autoConvert_api_FieldSelector_To_v1_FieldSelector,
 		autoConvert_api_FlexVolumeSource_To_v1_FlexVolumeSource,
 		autoConvert_api_FlockerVolumeSource_To_v1_FlockerVolumeSource,
 		autoConvert_api_GCEPersistentDiskVolumeSource_To_v1_GCEPersistentDiskVolumeSource,
@@ -6489,6 +6613,8 @@ func init() {
 		autoConvert_v1_ExecAction_To_api_ExecAction,
 		autoConvert_v1_ExportOptions_To_unversioned_ExportOptions,
 		autoConvert_v1_FCVolumeSource_To_api_FCVolumeSource,
+		autoConvert_v1_FieldSelectorRequirement_To_api_FieldSelectorRequirement,
+		autoConvert_v1_FieldSelector_To_api_FieldSelector,
 		autoConvert_v1_FlexVolumeSource_To_api_FlexVolumeSource,
 		autoConvert_v1_FlockerVolumeSource_To_api_FlockerVolumeSource,
 		autoConvert_v1_GCEPersistentDiskVolumeSource_To_api_GCEPersistentDiskVolumeSource,

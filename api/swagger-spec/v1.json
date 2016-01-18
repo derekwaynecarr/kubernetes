@@ -15468,6 +15468,60 @@
      "hard": {
       "type": "any",
       "description": "Hard is the set of desired hard limits for each named resource. More info: http://releases.k8s.io/HEAD/docs/design/admission_control_resource_quota.md#admissioncontrol-plugin-resourcequota"
+     },
+     "fieldSelector": {
+      "$ref": "v1.FieldSelector",
+      "description": "FieldSelector is a field query that must match over the resource tracked by quota. If empty, the quota matches every resource."
+     }
+    }
+   },
+   "v1.FieldSelector": {
+    "id": "v1.FieldSelector",
+    "description": "A field selector is a field query over a set of resources. The result of matchFields and matchExpressions are ANDed. An empty field selector matches all objects. A null field selector matches no objects.",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "description": "Kind of object that scopes the selector; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds\" If omitted, the Kind is inferred from the context"
+     },
+     "apiVersion": {
+      "type": "string",
+      "description": "API version of object that scopes the selector If omitted, the API version is inferred from the context"
+     },
+     "matchFields": {
+      "type": "any",
+      "description": "matchFields is a map of {fieldPath,value} pairs. A single {fieldPath,value} in the matchFields map is equivalent to an element of matchExpressions, whose fieldPath field is \"fieldPath\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed."
+     },
+     "matchExpressions": {
+      "type": "array",
+      "items": {
+       "$ref": "v1.FieldSelectorRequirement"
+      },
+      "description": "matchExpressions is a list of field selector requirements. The requirements are ANDed."
+     }
+    }
+   },
+   "v1.FieldSelectorRequirement": {
+    "id": "v1.FieldSelectorRequirement",
+    "description": "A field selector requirement is a selector that contains values, a fieldPath, and an operator that relates the fieldPath and values.",
+    "required": [
+     "fieldPath",
+     "operator"
+    ],
+    "properties": {
+     "fieldPath": {
+      "type": "string",
+      "description": "fieldPath is the path that the selector applies to."
+     },
+     "operator": {
+      "type": "string",
+      "description": "operator represents a fieldPath's relationship to a set of values. Valid operators ard In, NotIn, Exists and DoesNotExist."
+     },
+     "values": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch."
      }
     }
    },

@@ -421,6 +421,29 @@ func (FCVolumeSource) SwaggerDoc() map[string]string {
 	return map_FCVolumeSource
 }
 
+var map_FieldSelector = map[string]string{
+	"":                 "A field selector is a field query over a set of resources. The result of matchFields and matchExpressions are ANDed. An empty field selector matches all objects. A null field selector matches no objects.",
+	"kind":             "Kind of object that scopes the selector; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds\" If omitted, the Kind is inferred from the context",
+	"apiVersion":       "API version of object that scopes the selector If omitted, the API version is inferred from the context",
+	"matchFields":      "matchFields is a map of {fieldPath,value} pairs. A single {fieldPath,value} in the matchFields map is equivalent to an element of matchExpressions, whose fieldPath field is \"fieldPath\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+	"matchExpressions": "matchExpressions is a list of field selector requirements. The requirements are ANDed.",
+}
+
+func (FieldSelector) SwaggerDoc() map[string]string {
+	return map_FieldSelector
+}
+
+var map_FieldSelectorRequirement = map[string]string{
+	"":          "A field selector requirement is a selector that contains values, a fieldPath, and an operator that relates the fieldPath and values.",
+	"fieldPath": "fieldPath is the path that the selector applies to.",
+	"operator":  "operator represents a fieldPath's relationship to a set of values. Valid operators ard In, NotIn, Exists and DoesNotExist.",
+	"values":    "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+}
+
+func (FieldSelectorRequirement) SwaggerDoc() map[string]string {
+	return map_FieldSelectorRequirement
+}
+
 var map_FlexVolumeSource = map[string]string{
 	"":          "FlexVolume represents a generic volume resource that is provisioned/attached using a exec based plugin. This is an alpha feature and may change in future.",
 	"driver":    "Driver is the name of the driver to use for this volume.",
@@ -1220,8 +1243,9 @@ func (ResourceQuotaList) SwaggerDoc() map[string]string {
 }
 
 var map_ResourceQuotaSpec = map[string]string{
-	"":     "ResourceQuotaSpec defines the desired hard limits to enforce for Quota.",
-	"hard": "Hard is the set of desired hard limits for each named resource. More info: http://releases.k8s.io/HEAD/docs/design/admission_control_resource_quota.md#admissioncontrol-plugin-resourcequota",
+	"":              "ResourceQuotaSpec defines the desired hard limits to enforce for Quota.",
+	"hard":          "Hard is the set of desired hard limits for each named resource. More info: http://releases.k8s.io/HEAD/docs/design/admission_control_resource_quota.md#admissioncontrol-plugin-resourcequota",
+	"fieldSelector": "FieldSelector is a field query that must match over the resource tracked by quota. If empty, the quota matches every resource.",
 }
 
 func (ResourceQuotaSpec) SwaggerDoc() map[string]string {

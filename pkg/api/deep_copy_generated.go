@@ -67,6 +67,8 @@ func init() {
 		deepCopy_api_ExecAction,
 		deepCopy_api_ExportOptions,
 		deepCopy_api_FCVolumeSource,
+		deepCopy_api_FieldSelector,
+		deepCopy_api_FieldSelectorRequirement,
 		deepCopy_api_FlexVolumeSource,
 		deepCopy_api_FlockerVolumeSource,
 		deepCopy_api_GCEPersistentDiskVolumeSource,
@@ -797,6 +799,45 @@ func deepCopy_api_FCVolumeSource(in FCVolumeSource, out *FCVolumeSource, c *conv
 	}
 	out.FSType = in.FSType
 	out.ReadOnly = in.ReadOnly
+	return nil
+}
+
+func deepCopy_api_FieldSelector(in FieldSelector, out *FieldSelector, c *conversion.Cloner) error {
+	out.Kind = in.Kind
+	out.APIVersion = in.APIVersion
+	if in.MatchFields != nil {
+		in, out := in.MatchFields, &out.MatchFields
+		*out = make(map[string]string)
+		for key, val := range in {
+			(*out)[key] = val
+		}
+	} else {
+		out.MatchFields = nil
+	}
+	if in.MatchExpressions != nil {
+		in, out := in.MatchExpressions, &out.MatchExpressions
+		*out = make([]FieldSelectorRequirement, len(in))
+		for i := range in {
+			if err := deepCopy_api_FieldSelectorRequirement(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
+	return nil
+}
+
+func deepCopy_api_FieldSelectorRequirement(in FieldSelectorRequirement, out *FieldSelectorRequirement, c *conversion.Cloner) error {
+	out.FieldPath = in.FieldPath
+	out.Operator = in.Operator
+	if in.Values != nil {
+		in, out := in.Values, &out.Values
+		*out = make([]string, len(in))
+		copy(*out, in)
+	} else {
+		out.Values = nil
+	}
 	return nil
 }
 
@@ -2237,6 +2278,15 @@ func deepCopy_api_ResourceQuotaSpec(in ResourceQuotaSpec, out *ResourceQuotaSpec
 		}
 	} else {
 		out.Hard = nil
+	}
+	if in.FieldSelector != nil {
+		in, out := in.FieldSelector, &out.FieldSelector
+		*out = new(FieldSelector)
+		if err := deepCopy_api_FieldSelector(*in, *out, c); err != nil {
+			return err
+		}
+	} else {
+		out.FieldSelector = nil
 	}
 	return nil
 }

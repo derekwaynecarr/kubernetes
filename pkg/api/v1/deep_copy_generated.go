@@ -645,6 +645,44 @@ func deepCopy_v1_FCVolumeSource(in FCVolumeSource, out *FCVolumeSource, c *conve
 	return nil
 }
 
+func deepCopy_v1_FieldSelector(in FieldSelector, out *FieldSelector, c *conversion.Cloner) error {
+	out.Kind = in.Kind
+	out.APIVersion = in.APIVersion
+	if in.MatchFields != nil {
+		out.MatchFields = make(map[string]string)
+		for key, val := range in.MatchFields {
+			out.MatchFields[key] = val
+		}
+	} else {
+		out.MatchFields = nil
+	}
+	if in.MatchExpressions != nil {
+		out.MatchExpressions = make([]FieldSelectorRequirement, len(in.MatchExpressions))
+		for i := range in.MatchExpressions {
+			if err := deepCopy_v1_FieldSelectorRequirement(in.MatchExpressions[i], &out.MatchExpressions[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
+	return nil
+}
+
+func deepCopy_v1_FieldSelectorRequirement(in FieldSelectorRequirement, out *FieldSelectorRequirement, c *conversion.Cloner) error {
+	out.FieldPath = in.FieldPath
+	out.Operator = in.Operator
+	if in.Values != nil {
+		out.Values = make([]string, len(in.Values))
+		for i := range in.Values {
+			out.Values[i] = in.Values[i]
+		}
+	} else {
+		out.Values = nil
+	}
+	return nil
+}
+
 func deepCopy_v1_FlexVolumeSource(in FlexVolumeSource, out *FlexVolumeSource, c *conversion.Cloner) error {
 	out.Driver = in.Driver
 	out.FSType = in.FSType
@@ -1975,6 +2013,14 @@ func deepCopy_v1_ResourceQuotaSpec(in ResourceQuotaSpec, out *ResourceQuotaSpec,
 	} else {
 		out.Hard = nil
 	}
+	if in.FieldSelector != nil {
+		out.FieldSelector = new(FieldSelector)
+		if err := deepCopy_v1_FieldSelector(*in.FieldSelector, out.FieldSelector, c); err != nil {
+			return err
+		}
+	} else {
+		out.FieldSelector = nil
+	}
 	return nil
 }
 
@@ -2506,6 +2552,8 @@ func init() {
 		deepCopy_v1_ExecAction,
 		deepCopy_v1_ExportOptions,
 		deepCopy_v1_FCVolumeSource,
+		deepCopy_v1_FieldSelector,
+		deepCopy_v1_FieldSelectorRequirement,
 		deepCopy_v1_FlexVolumeSource,
 		deepCopy_v1_FlockerVolumeSource,
 		deepCopy_v1_GCEPersistentDiskVolumeSource,
