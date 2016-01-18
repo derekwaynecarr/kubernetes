@@ -1994,6 +1994,8 @@ func ValidateResourceQuota(resourceQuota *api.ResourceQuota) field.ErrorList {
 		allErrs = append(allErrs, validateResourceName(string(k), resPath)...)
 		allErrs = append(allErrs, validateResourceQuantityValue(string(k), v, resPath)...)
 	}
+	// TODO validate fieldSelector
+	// TODO validate that spec.Hard does not reference invalid resources per fieldSelector
 	fldPath = field.NewPath("status", "hard")
 	for k, v := range resourceQuota.Status.Hard {
 		resPath := fldPath.Key(string(k))
@@ -2031,6 +2033,8 @@ func ValidateResourceQuotaUpdate(newResourceQuota, oldResourceQuota *api.Resourc
 		allErrs = append(allErrs, validateResourceName(string(k), resPath)...)
 		allErrs = append(allErrs, validateResourceQuantityValue(string(k), v, resPath)...)
 	}
+	// TODO: ensure that the fieldSelector does not change
+	// TODO: ensure that the enumerated set of resources in HARD are aligned with fieldSelector
 	newResourceQuota.Status = oldResourceQuota.Status
 	return allErrs
 }
