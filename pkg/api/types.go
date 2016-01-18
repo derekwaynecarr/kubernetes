@@ -2016,6 +2016,9 @@ const (
 type ResourceQuotaSpec struct {
 	// Hard is the set of desired hard limits for each named resource
 	Hard ResourceList `json:"hard,omitempty"`
+	// FieldSelector is a field query that must match over the resource tracked by quota.
+	// If empty, the quota matches every resource.
+	FieldSelector *FieldSelector `json:"fieldSelector,omitempty"`
 }
 
 // ResourceQuotaStatus defines the enforced hard limits and observed use
@@ -2268,4 +2271,47 @@ type RangeAllocation struct {
 const (
 	// "default-scheduler" is the name of default scheduler.
 	DefaultSchedulerName = "default-scheduler"
+)
+
+// A field selector is a field query over a set of resources. The result of matchFields and
+// matchExpressions are ANDed. An empty field selector matches all objects. A null
+// field selector matches no objects.
+type FieldSelector struct {
+	// Kind of object that scopes the selector; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds"
+	// If omitted, the Kind is inferred from the context
+	Kind string `json:"kind,omitempty"`
+	// API version of object that scopes the selector
+	// If omitted, the API version is inferred from the context
+	APIVersion string `json:"apiVersion,omitempty"`
+	// matchFields is a map of {fieldPath,value} pairs. A single {fieldPath,value} in the matchFields
+	// map is equivalent to an element of matchExpressions, whose fieldPath field is "fieldPath", the
+	// operator is "In", and the values array contains only "value". The requirements are ANDed.
+	MatchFields map[string]string `json:"matchFields,omitempty"`
+	// matchExpressions is a list of field selector requirements. The requirements are ANDed.
+	MatchExpressions []FieldSelectorRequirement `json:"matchExpressions,omitempty"`
+}
+
+// A field selector requirement is a selector that contains values, a fieldPath, and an operator that
+// relates the fieldPath and values.
+type FieldSelectorRequirement struct {
+	// fieldPath is the path that the selector applies to.
+	FieldPath string `json:"fieldPath" patchStrategy:"merge" patchMergeKey:"fieldPath"`
+	// operator represents a fieldPath's relationship to a set of values.
+	// Valid operators ard In, NotIn, Exists and DoesNotExist.
+	Operator FieldSelectorOperator `json:"operator"`
+	// values is an array of string values. If the operator is In or NotIn,
+	// the values array must be non-empty. If the operator is Exists or DoesNotExist,
+	// the values array must be empty. This array is replaced during a strategic
+	// merge patch.
+	Values []string `json:"values,omitempty"`
+}
+
+// A field selector operator is the set of operators that can be used in a selector requirement.
+type FieldSelectorOperator string
+
+const (
+	FieldSelectorOpIn           FieldSelectorOperator = "In"
+	FieldSelectorOpNotIn        FieldSelectorOperator = "NotIn"
+	FieldSelectorOpExists       FieldSelectorOperator = "Exists"
+	FieldSelectorOpDoesNotExist FieldSelectorOperator = "DoesNotExist"
 )
