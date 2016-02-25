@@ -156,6 +156,8 @@ type CloudConfig struct {
 // unique identifier of the e2e run
 var runId = util.NewUUID()
 
+type CreateTestingNSFn func(baseName string, c *client.Client, labels map[string]string) (*api.Namespace, error)
+
 type TestContextType struct {
 	KubeConfig            string
 	KubeContext           string
@@ -182,6 +184,10 @@ type TestContextType struct {
 	GatherMetricsAfterTest            bool
 	// Currently supported values are 'hr' for human-readable and 'json'. It's a comma separated list.
 	OutputPrintType string
+	// CreateTestingNS is responsible for creating namespace used for executing e2e tests.
+	// It accepts namespace base name, which will be prepended with e2e prefix, kube client
+	// and labels to be applied to a namespace.
+	CreateTestingNS CreateTestingNSFn
 }
 
 var testContext TestContextType
@@ -657,9 +663,9 @@ func waitForPersistentVolumePhase(phase api.PersistentVolumePhase, c *client.Cli
 	return fmt.Errorf("PersistentVolume %s not in phase %s within %v", pvName, phase, timeout)
 }
 
-// createTestingNS should be used by every test, note that we append a common prefix to the provided test name.
+// CreateTestingNS should be used by every test, note that we append a common prefix to the provided test name.
 // Please see NewFramework instead of using this directly.
-func createTestingNS(baseName string, c *client.Client, labels map[string]string) (*api.Namespace, error) {
+func CreateTestingNS(baseName string, c *client.Client, labels map[string]string) (*api.Namespace, error) {
 	if labels == nil {
 		labels = map[string]string{}
 	}
@@ -2227,11 +2233,11 @@ func waitForDeploymentOldRSsNum(c *clientset.Clientset, ns, deploymentName strin
 }
 
 func logReplicaSetsOfDeployment(deployment *extensions.Deployment, allOldRSs []*extensions.ReplicaSet, newRS *extensions.ReplicaSet) {
-	Logf("Deployment = %+v", deployment)
+	Logf("Deployment: %+v. Selector = %+v", deployment, deployment.Spec.Selector)
 	for i := range allOldRSs {
-		Logf("All old ReplicaSets (%d/%d) of deployment %s: %+v", i+1, len(allOldRSs), deployment.Name, allOldRSs[i])
+		Logf("All old ReplicaSets (%d/%d) of deployment %s: %+v. Selector = %+v", i+1, len(allOldRSs), deployment.Name, allOldRSs[i], allOldRSs[i].Spec.Selector)
 	}
-	Logf("New ReplicaSet of deployment %s: %+v", deployment.Name, newRS)
+	Logf("New ReplicaSet of deployment %s: %+v. Selector = %+v", deployment.Name, newRS, newRS.Spec.Selector)
 }
 
 func waitForObservedDeployment(c *clientset.Clientset, ns, deploymentName string, desiredGeneration int64) error {

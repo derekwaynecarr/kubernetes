@@ -95,7 +95,7 @@ type ReplicaSetController struct {
 }
 
 // NewReplicaSetController creates a new ReplicaSetController.
-func NewReplicaSetController(kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int) *ReplicaSetController {
+func NewReplicaSetController(kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicaSetController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{kubeClient.Core().Events("")})
@@ -191,7 +191,7 @@ func NewReplicaSetController(kubeClient clientset.Interface, resyncPeriod contro
 
 	rsc.syncHandler = rsc.syncReplicaSet
 	rsc.podStoreSynced = rsc.podController.HasSynced
-	rsc.lookupCache = controller.NewMatchingCache(controller.DefaultCacheEntries)
+	rsc.lookupCache = controller.NewMatchingCache(lookupCacheSize)
 	return rsc
 }
 
@@ -351,12 +351,12 @@ func (rsc *ReplicaSetController) deletePod(obj interface{}) {
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			glog.Errorf("Couldn't get object from tombstone %+v, could take up to %v before a replica set recreates a replica", obj, controller.ExpectationsTimeout)
+			glog.Errorf("Couldn't get object from tombstone %+v", obj)
 			return
 		}
 		pod, ok = tombstone.Obj.(*api.Pod)
 		if !ok {
-			glog.Errorf("Tombstone contained object that is not a pod %+v, could take up to %v before replica set recreates a replica", obj, controller.ExpectationsTimeout)
+			glog.Errorf("Tombstone contained object that is not a pod %+v", obj)
 			return
 		}
 	}

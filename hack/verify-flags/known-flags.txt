@@ -151,6 +151,7 @@ input-dirs
 insecure-bind-address
 insecure-port
 insecure-skip-tls-verify
+instance-name-prefix
 iptables-masquerade-bit
 iptables-sync-period
 ir-data-source
@@ -291,6 +292,7 @@ pv-recycler-pod-template-filepath-nfs
 pv-recycler-maximum-retry
 pv-recycler-timeout-increment-hostpath
 pvclaimbinder-sync-period
+rc-lookup-cache-size
 read-only-port
 really-crash-for-testing
 reconcile-cidr
@@ -316,6 +318,7 @@ rkt-path
 rkt-stage1-image
 root-ca-file
 root-dir
+rs-lookup-cache-size
 run-proxy
 runtime-config
 runtime-cgroups
