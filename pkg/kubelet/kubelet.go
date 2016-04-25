@@ -51,6 +51,7 @@ import (
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	"k8s.io/kubernetes/pkg/kubelet/dockertools"
 	"k8s.io/kubernetes/pkg/kubelet/envvars"
+	"k8s.io/kubernetes/pkg/kubelet/eviction"
 	"k8s.io/kubernetes/pkg/kubelet/lifecycle"
 	"k8s.io/kubernetes/pkg/kubelet/metrics"
 	"k8s.io/kubernetes/pkg/kubelet/network"
@@ -222,6 +223,7 @@ func NewMainKubelet(
 	containerRuntimeOptions []kubecontainer.Option,
 	hairpinMode string,
 	babysitDaemons bool,
+	thresholds []eviction.Threshold,
 	kubeOptions []Option,
 ) (*Kubelet, error) {
 	if rootDirectory == "" {
@@ -929,6 +931,7 @@ func (kl *Kubelet) initializeModules() error {
 
 	// Step 7: Start resource analyzer
 	kl.resourceAnalyzer.Start()
+
 	return nil
 }
 
@@ -967,6 +970,7 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 	// Start component sync loops.
 	kl.statusManager.Start()
 	kl.probeManager.Start()
+
 	// Start the pod lifecycle event generator.
 	kl.pleg.Start()
 	kl.syncLoop(updates, kl)
