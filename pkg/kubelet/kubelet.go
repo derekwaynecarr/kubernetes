@@ -2874,7 +2874,7 @@ func (kl *Kubelet) syncNetworkStatus() {
 		}
 	}
 
-	kl.runtimeState.setNetworkState(kl.networkPlugin.NetworkStatus())
+	kl.runtimeState.setNetworkState(kl.networkPlugin.Status())
 }
 
 // Set addresses for the node.
