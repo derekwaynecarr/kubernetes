@@ -75,8 +75,9 @@ func toRuntimeImage(image *dockertypes.Image) (*kubecontainer.Image, error) {
 	}
 
 	return &kubecontainer.Image{
-		ID:       image.ID,
-		RepoTags: image.RepoTags,
-		Size:     image.VirtualSize,
+		ID:          image.ID,
+		RepoTags:    image.RepoTags,
+		RepoDigests: image.RepoDigests,
+		Size:        image.VirtualSize,
 	}, nil
 }
