@@ -163,10 +163,12 @@ func (rq *ResourceQuotaController) enqueueResourceQuota(obj interface{}) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (rq *ResourceQuotaController) worker() {
+	reallyQuit := false
 	for {
 		func() {
 			key, quit := rq.queue.Get()
 			if quit {
+				reallyQuit = true
 				return
 			}
 			defer rq.queue.Done(key)
@@ -176,6 +178,10 @@ func (rq *ResourceQuotaController) worker() {
 				rq.queue.Add(key)
 			}
 		}()
+		if reallyQuit {
+			glog.Infof("resource quota controller worker shutting down")
+			return
+		}
 	}
 }
 

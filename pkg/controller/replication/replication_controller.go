@@ -102,6 +102,17 @@ type ReplicationManager struct {
 	queue *workqueue.Type
 }
 
+// NewReplicationManagerForIntegration creates a replication manager but records events to a fake recorder.  Meant to only be used in integration tests.
+func NewReplicationManagerForIntegration(podInformer framework.SharedIndexInformer, kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
+	rm := NewReplicationManager(podInformer, kubeClient, resyncPeriod, burstReplicas, lookupCacheSize)
+	rm.podControl = controller.RealPodControl{
+		KubeClient: kubeClient,
+		Recorder:   &record.FakeRecorder{},
+	}
+	return rm
+}
+
+// NewReplicationManager creates a replication manager.
 func NewReplicationManager(podInformer framework.SharedIndexInformer, kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
@@ -198,12 +209,19 @@ func NewReplicationManager(podInformer framework.SharedIndexInformer, kubeClient
 
 }
 
+// NewReplicationManagerFromClientForIntegration creates a new ReplicationManager that runs its own informer.  It disables event recording for use in integration tests.
+func NewReplicationManagerFromClientForIntegration(kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
+	podInformer := informers.CreateSharedPodIndexInformer(kubeClient, resyncPeriod())
+	rm := NewReplicationManagerForIntegration(podInformer, kubeClient, resyncPeriod, burstReplicas, lookupCacheSize)
+	rm.internalPodInformer = podInformer
+	return rm
+}
+
 // NewReplicationManagerFromClient creates a new ReplicationManager that runs its own informer.
 func NewReplicationManagerFromClient(kubeClient clientset.Interface, resyncPeriod controller.ResyncPeriodFunc, burstReplicas int, lookupCacheSize int) *ReplicationManager {
 	podInformer := informers.CreateSharedPodIndexInformer(kubeClient, resyncPeriod())
 	rm := NewReplicationManager(podInformer, kubeClient, resyncPeriod, burstReplicas, lookupCacheSize)
 	rm.internalPodInformer = podInformer
-
 	return rm
 }
 
@@ -413,10 +431,12 @@ func (rm *ReplicationManager) enqueueController(obj interface{}) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (rm *ReplicationManager) worker() {
+	reallyQuit := false
 	for {
 		func() {
 			key, quit := rm.queue.Get()
 			if quit {
+				reallyQuit = true
 				return
 			}
 			defer rm.queue.Done(key)
@@ -425,6 +445,10 @@ func (rm *ReplicationManager) worker() {
 				glog.Errorf("Error syncing replication controller: %v", err)
 			}
 		}()
+		if reallyQuit {
+			glog.Infof("replication controller worker shutting down")
+			return
+		}
 	}
 }
 
