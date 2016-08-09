@@ -386,6 +386,7 @@ function start_kubelet {
         --address="${KUBELET_HOST}" \
         --api-servers="${API_HOST}:${API_PORT}" \
         --cpu-cfs-quota=${CPU_CFS_QUOTA} \
+        --eviction-hard="nodefs.available<16Gi" \
         ${dns_args} \
         ${net_plugin_dir_args} \
         ${net_plugin_args} \

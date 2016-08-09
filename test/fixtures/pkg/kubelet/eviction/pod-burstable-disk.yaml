@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    generateName: burstable-disk-  
+spec:
+  containers:
+    - name: test-container
+      image: gcr.io/google_containers/busybox:1.24
+      command: [ "/bin/sh", "-c", "for i in $(seq 1 ${NUM_FILES}); do dd if=/dev/zero of=/junk.$i bs=1M count=${FILE_SIZE_MB}; done; tail -f /dev/null" ]
+      resources:
+        requests:
+          memory: "32Mi"
+          cpu: "125m"
+        limits:
+          memory: "64Mi"
+          cpu: "250m"
+      env:      
+        - name: FILE_SIZE_MB
+          value: "50"
+        - name: NUM_FILES
+          value: "50"          
+  restartPolicy: Never

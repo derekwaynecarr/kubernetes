@@ -1,0 +1,56 @@
+demo-script
+
+disk eviction
+
+1. show filesystems
+
+df -h
+
+explain i am running with overlayfs
+
+2. show kubelet startup
+
+nodefs.available
+imagefs.available 
+
+--low-diskspace-threshold-mb=256: The absolute free disk space, in MB, to maintain. When disk space falls below this threshold, new pods would be rejected. Default: 256
+--image-gc-high-threshold=90: The percent of disk usage after which image garbage collection is always run. Default: 90%
+--image-gc-low-threshold=80: The percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to. Default: 80%
+
+fs.Int32Var(&s.MaxPerPodContainerCount, "maximum-dead-containers-per-container", s.MaxPerPodContainerCount, "Maximum number of old instances to retain per container.  Each container takes up some disk space.  Default: 2.")
+fs.MarkDeprecated("maximum-dead-containers-per-container", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
+fs.Int32Var(&s.MaxContainerCount, "maximum-dead-containers", s.MaxContainerCount, "Maximum number of old instances of containers to retain globally.  Each container takes up some disk space.  Default: 100.")
+fs.MarkDeprecated("maximum-dead-containers", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
+
+      
+3. show node conditions
+
+kubectl describe node (describe DiskPressure vs. OutOfDisk)
+
+4. show summary api
+
+curl -k https://localhost:10250/stats/summary | less
+
+explain inodes, inodes_free, and fixes that were needed in cadvisor to make this correct ;-)
+
+5. create pods in each qos class
+
+cluster/kubectl.sh create -f test/fixtures/pkg/kubelet/eviction/pod-*
+
+6. see disk pressure conditions
+
+show logs in eviction manager that image gc occurred
+
+7. explain no pod will be admitted to the node or placed on that node by scheduler
+
+create a new pod, describe pod, show failed fit predicate (NodeUnderDiskPressure)
+
+next steps:
+
+inode exhaustion (pr in flight)
+percentage based eviction thresholds (google to complete)
+
+Quota updates:
+
+cluster/kubectl.sh create quota my-quota --hard=requests.storage=10Gi,persistentvolumeclaims=10
+cluster/kubectl.sh create -f test/fixtures/pkg/kubectl/cmd/create/pvc.yaml 
