@@ -49,6 +49,8 @@ type CgroupConfig struct {
 // CgroupManager allows for cgroup management.
 // Supports Cgroup Creation ,Deletion and Updates.
 type CgroupManager interface {
+	// Adapts a name to its concrete form based on cgroup driver
+	Adapt(string) string
 	// Create creates and applies the cgroup configurations on the cgroup.
 	// It just creates the leaf cgroups.
 	// It expects the parent cgroup to already exist.
@@ -72,6 +74,20 @@ type QOSContainersInfo struct {
 // The Pod workers interact with the PodContainerManager to create and destroy
 // containers for the pod.
 type PodContainerManager interface {
+
+	// GetConcreteContainerName is the cgroupfs name for the pod on the host system.
+	// It is the literal name for the container on disk after integration with the configured
+	// cgroup driver.  This name is the name that should be used when integrating pod-level cgroups
+	// with external systems.
+	GetConcreteContainerName(*api.Pod) string
+
+	// GetInternalPodContainerName is the cgroupfs style name for the pod.  This name should be used
+	// when interfacing with the internal cgroup manager as it provides a consistent naming structure
+	// independent of registered cgroup driver.
+	GetInternalPodContainerName(*api.Pod) string
+
+	// intended for integration with legacy runtimes that expect driver specific input
+	GetPodContainerNameForDriver(*api.Pod) string
 	// getPodContainerName returns the pod container's absolute name
 	GetPodContainerName(*api.Pod) string
 
