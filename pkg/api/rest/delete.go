@@ -81,7 +81,12 @@ func BeforeDelete(strategy RESTDeleteStrategy, ctx api.Context, obj runtime.Obje
 		// if we are already being deleted, we may only shorten the deletion grace period
 		// this means the object was gracefully deleted previously but deletionGracePeriodSeconds was not set,
 		// so we force deletion immediately
-		if objectMeta.DeletionGracePeriodSeconds == nil {
+		// IMPORTANT:
+		// if we have a deletion timestamp, and our current grace period seconds is 0, we should delete immediately.
+		// this can happen during a race in deletion code path, but without this check, we were unable to ever delete a resource
+		// since we kept treating graceperiod=0 on incoming request as >= current value (0) and saying the delete was
+		// graceful pending.
+		if objectMeta.DeletionGracePeriodSeconds == nil || *objectMeta.DeletionGracePeriodSeconds == 0 {
 			return false, false, nil
 		}
 		// only a shorter grace period may be provided by a user
