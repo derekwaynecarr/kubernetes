@@ -193,6 +193,7 @@ func (t *Tester) TestDeleteGraceful(valid runtime.Object, createFn CreateFunc, g
 	t.testDeleteGracefulExtend(copyOrDie(valid), createFn, getFn, expectedGrace)
 	t.testDeleteGracefulShorten(copyOrDie(valid), createFn, getFn, expectedGrace)
 	t.testDeleteGracefulImmediate(copyOrDie(valid), createFn, getFn, expectedGrace)
+	t.testDeleteGracefulImmediateIfExistingGraceIsZero(copyOrDie(valid), createFn, getFn)
 }
 
 // Test getting object.
@@ -955,6 +956,31 @@ func (t *Tester) testDeleteGracefulImmediate(obj runtime.Object, createFn Create
 	}
 	if generation >= objectMeta.Generation {
 		t.Error("Generation wasn't bumped when deletion timestamp was set")
+	}
+}
+
+func (t *Tester) testDeleteGracefulImmediateIfExistingGraceIsZero(obj runtime.Object, createFn CreateFunc, getFn GetFunc) {
+	ctx := t.TestContext()
+	foo := copyOrDie(obj)
+	t.setObjectMeta(foo, "foo4")
+
+	meta := t.getObjectMetaOrFail(obj)
+	deletionTimestamp := unversioned.NewTime(time.Now())
+	deletionGracePeriodSeconds := int64(0)
+	meta.DeletionTimestamp = &deletionTimestamp
+	meta.DeletionGracePeriodSeconds = &deletionGracePeriodSeconds
+
+	if err := createFn(ctx, foo); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	_, err := t.storage.(rest.GracefulDeleter).Delete(ctx, meta.Name, api.NewDeleteOptions(0))
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	_, err = t.storage.(rest.Getter).Get(ctx, meta.Name)
+	if !errors.IsNotFound(err) {
+		t.Errorf("unexpected error, object should be deleted immediately: %v", err)
 	}
 }
 
