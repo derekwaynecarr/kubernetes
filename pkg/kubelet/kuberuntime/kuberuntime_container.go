@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/armon/circbuf"
 	"github.com/golang/glog"
 
@@ -74,15 +76,15 @@ func (m *kubeGenericRuntimeManager) startContainer(podSandboxID string, podSandb
 
 	containerConfig, err := m.generateContainerConfig(container, pod, restartCount, podIP, imageRef)
 	if err != nil {
-		m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedToCreateContainer, "Failed to create container with error: %v", err)
+		// m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedToCreateContainer, "Failed to create container with error: %v", grpc.ErrorDesc(err))
 		return "Generate Container Config Failed", err
 	}
 	containerID, err := m.runtimeService.CreateContainer(podSandboxID, containerConfig, podSandboxConfig)
 	if err != nil {
-		m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedToCreateContainer, "Failed to create container with error: %v", err)
+		// m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedToCreateContainer, "Failed to create container with error: %v", grpc.ErrorDesc(err))
 		return "Create Container Failed", err
 	}
-	m.recorder.Eventf(ref, v1.EventTypeNormal, events.CreatedContainer, "Created container with id %v", containerID)
+	m.recorder.Eventf(ref, v1.EventTypeNormal, events.CreatedContainer, "Created container: %v", container.Name)
 	if ref != nil {
 		m.containerRefManager.SetRef(kubecontainer.ContainerID{
 			Type: m.runtimeName,
@@ -93,11 +95,11 @@ func (m *kubeGenericRuntimeManager) startContainer(podSandboxID string, podSandb
 	// Step 3: start the container.
 	err = m.runtimeService.StartContainer(containerID)
 	if err != nil {
-		m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedToStartContainer,
-			"Failed to start container with id %v with error: %v", containerID, err)
-		return "Start Container Failed", err
+		// m.recorder.Eventf(ref, v1.EventTypeWarning, events.FailedToStartContainer,
+		// "Failed to start container: %v with error: %v", container.Name, grpc.ErrorDesc(err))
+		return "Start Container Failed", fmt.Errorf("%v", grpc.ErrorDesc(err))
 	}
-	m.recorder.Eventf(ref, v1.EventTypeNormal, events.StartedContainer, "Started container with id %v", containerID)
+	m.recorder.Eventf(ref, v1.EventTypeNormal, events.StartedContainer, "Started container: %v", container.Name)
 
 	// Symlink container logs to the legacy container log location for cluster logging
 	// support.
@@ -118,11 +120,12 @@ func (m *kubeGenericRuntimeManager) startContainer(podSandboxID string, podSandb
 			Type: m.runtimeName,
 			ID:   containerID,
 		}
-		msg, handlerErr := m.runner.Run(kubeContainerID, pod, container, container.Lifecycle.PostStart)
+		_, handlerErr := m.runner.Run(kubeContainerID, pod, container, container.Lifecycle.PostStart)
 		if handlerErr != nil {
 			err := fmt.Errorf("PostStart handler: %v", handlerErr)
-			m.generateContainerEvent(kubeContainerID, v1.EventTypeWarning, events.FailedPostStartHook, msg)
-			m.killContainer(pod, kubeContainerID, container.Name, "FailedPostStartHook", nil)
+			// output the same event in killContainer after...
+			// m.generateContainerEvent(kubeContainerID, v1.EventTypeWarning, events.FailedPostStartHook, msg)
+			m.killContainer(pod, kubeContainerID, container.Name, events.FailedPostStartHook, nil)
 			return "PostStart Hook Failed", err
 		}
 	}
