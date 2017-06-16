@@ -1334,15 +1334,21 @@ func (c *VolumeNodeChecker) predicate(pod *v1.Pod, meta interface{}, nodeInfo *s
 		}
 		pvc, err := c.pvcInfo.GetPersistentVolumeClaimInfo(namespace, pvcName)
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return false, nil, nil
+			}
 			return false, nil, err
 		}
-
 		if pvc == nil {
-			return false, nil, fmt.Errorf("PersistentVolumeClaim was not found: %q", pvcName)
+			// its not an error if the pvc is not found
+			// it just means it didn't exist yet
+			return false, nil, nil
 		}
 		pvName := pvc.Spec.VolumeName
 		if pvName == "" {
-			return false, nil, fmt.Errorf("PersistentVolumeClaim is not bound: %q", pvcName)
+			// its not an error if the pvc is not yet bound.
+			// it just means we cant do anything yet.
+			return false, nil, nil
 		}
 
 		pv, err := c.pvInfo.GetPersistentVolumeInfo(pvName)
