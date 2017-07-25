@@ -17,9 +17,13 @@ limitations under the License.
 package generic
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubernetes/pkg/quota"
 )
+
+// DiscoveryResourcesFunc knows how to discover supported resources
+type DiscoveryResourcesFunc func() ([]*metav1.APIResourceList, error)
 
 // Ensure it implements the required interface
 var _ quota.Registry = &GenericRegistry{}

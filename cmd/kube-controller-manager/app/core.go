@@ -217,6 +217,19 @@ func startPodGCController(ctx ControllerContext) (bool, error) {
 }
 
 func startResourceQuotaController(ctx ControllerContext) (bool, error) {
+	// TODO: support the ability to do generic object count quota for discovered types
+	// open questions
+	// -- evaluators assume k8s/api types and conversion to internal (need to know how dynamic client will work)
+	// -- object count evaluators could use dynamic client pool for gvr and work against unstructured list only
+	// - do we want to ignore CRD resources?  is there a cost to watch them?
+	// - how will replenish controller get updated?
+	// -- discover available group kinds (for now, do it once)
+	// -- replenishment controller will handle some things specifically
+	// -- it will default to then support object count evaluator for all things
+	// - how will registry of evaluators get updated?
+	// -- single registry per group kind
+	// -- defer to generic evaluator when a specific option is not provided
+	// -- will keep existing registries (but need to take over object count usage)
 	resourceQuotaControllerClient := ctx.ClientBuilder.ClientOrDie("resourcequota-controller")
 	resourceQuotaRegistry := quotainstall.NewRegistry(resourceQuotaControllerClient, ctx.InformerFactory)
 	groupKindsToReplenish := []schema.GroupKind{
