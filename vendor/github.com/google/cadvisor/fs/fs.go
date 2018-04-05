@@ -194,6 +194,7 @@ func processMounts(mounts []*mount.Info, excludedMountpointPrefixes []string) ma
 		}
 		// Avoid bind mounts.
 		if _, ok := partitions[mount.Source]; ok {
+			glog.Infof("MOUNT %v is a bind mount, ignored.", mount)
 			continue
 		}
 
@@ -541,6 +542,15 @@ func (self *RealFsInfo) GetDirFsDevice(dir string) (*DeviceInfo, error) {
 			return &DeviceInfo{mount.Source, uint(major), uint(minor)}, nil
 		}
 	}
+
+	// handle bind mounts (i.e. if a kubelet --root-dir is on /tmp/*)
+	for _, mount := range self.mounts {
+		// we got a match
+		if uint(mount.Major) == major && uint(mount.Minor) == minor {
+			return &DeviceInfo{mount.Source, uint(major), uint(minor)}, nil
+		}
+	}
+
 	return nil, fmt.Errorf("could not find device with major: %d, minor: %d in cached partitions map", major, minor)
 }
 
