@@ -36,6 +36,12 @@ type SchemaOrBool struct {
 }
 
 func (sb *SchemaOrBool) Schema() common.Schema {
+	// When additionalProperties is a boolean (e.g., additionalProperties: true),
+	// SchemaOrBool.Schema is nil. Return nil to prevent nil pointer dereference
+	// when calling methods on the returned Schema.
+	if sb.SchemaOrBool.Schema == nil {
+		return nil
+	}
 	return &Schema{Schema: sb.SchemaOrBool.Schema}
 }
 

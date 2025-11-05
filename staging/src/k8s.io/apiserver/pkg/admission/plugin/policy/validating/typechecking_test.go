@@ -555,6 +555,47 @@ func TestTypeCheck(t *testing.T) {
 				toHaveLengthOf(0),
 			},
 		},
+		{
+			name: "additionalProperties with boolean true should not panic",
+			policy: &v1.ValidatingAdmissionPolicy{Spec: v1.ValidatingAdmissionPolicySpec{
+				Validations: []v1.Validation{
+					{
+						Expression: "object.spec.replicas > 1",
+					},
+				},
+				MatchConstraints: &v1.MatchResources{ResourceRules: []v1.NamedRuleWithOperations{
+					{
+						RuleWithOperations: v1.RuleWithOperations{
+							Rule: v1.Rule{
+								APIGroups:   []string{"apps"},
+								APIVersions: []string{"v1"},
+								Resources:   []string{"deployments"},
+							},
+						},
+					},
+				}},
+			}},
+			schemaToReturn: &spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Type: []string{"object"},
+					Properties: map[string]spec.Schema{
+						"spec": {
+							SchemaProps: spec.SchemaProps{
+								Type: []string{"object"},
+								AdditionalProperties: &spec.SchemaOrBool{
+									Allows: true,
+									Schema: nil, // This is nil when additionalProperties: true
+								},
+							},
+						},
+					},
+				},
+			},
+			assertions: []assertionFunc{
+				toHaveLengthOf(1),
+				toContain("undefined field 'replicas'"), // replicas is not defined because additionalProperties: true doesn't expose properties
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			typeChecker := buildTypeChecker(tc.schemaToReturn)
