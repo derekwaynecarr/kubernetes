@@ -1,0 +1,43 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: reproducers.example.com
+spec:
+  group: example.com
+  names:
+    kind: Reproducer
+    listKind: ReproducerList
+    plural: reproducers
+    singular: reproducer
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Reproducer is a CRD to reproduce a bug in the ValidatingAdmissionPolicy Status controller.
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              text:
+                type: string
+                description: Some text content.
+            type: object
+          status:
+            description: ReproducerStatus defines the observed state of Reproducer.
+            type: object
+            properties:
+              problematicProperty:
+                description: Adding this property makes the controller panic
+                additionalProperties: true
+                type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

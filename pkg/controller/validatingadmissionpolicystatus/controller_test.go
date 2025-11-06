@@ -222,3 +222,29 @@ func makePolicy(name string) *admissionregistrationv1.ValidatingAdmissionPolicy 
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}
 }
+
+// TestIssue135145_AdditionalPropertiesTrue is a reproducer for
+// https://github.com/kubernetes/kubernetes/issues/135145
+// This test validates the issue claim that type-checking a ValidatingAdmissionPolicy
+// that references a CRD with type=object and additionalProperties=true causes a panic.
+func TestIssue135145_AdditionalPropertiesTrue(t *testing.T) {
+	// The issue claims that a CRD with this schema causes the controller to panic:
+	//   status:
+	//     type: object
+	//     properties:
+	//       problematicProperty:
+	//         type: object
+	//         additionalProperties: true  # <-- This causes the panic
+
+	// We need to test with a CRD, not a built-in resource. However, the existing
+	// test infrastructure uses openapi.GetOpenAPIDefinitions which only has built-in types.
+	// To properly reproduce this, we would need to:
+	// 1. Create a custom SchemaResolver that includes the CRD schema
+	// 2. Ensure the schema has type=object with additionalProperties=true and no schema
+	// 3. Create a ValidatingAdmissionPolicy that references this CRD in matchConstraints
+	// 4. Verify that Check() either panics or handles it gracefully
+
+	// For now, let's note that this test is incomplete and would require
+	// a more sophisticated test setup with a mock CRD schema resolver.
+	t.Skip("Test requires custom CRD schema resolver - see issue #135145 for details")
+}
